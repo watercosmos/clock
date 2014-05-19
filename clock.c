@@ -93,59 +93,59 @@ __interrupt void uart0_rx_isr(void)
 				break;
 			case 1:
 				if (rx_now == 0xAA) {
-					rx_step++；
+					rx_step++;
 				} else
 					rx_rst();
 				break;
 			case 2:
 				rx_buf[rx_pos] = rx_now;	//目的设备ID
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 3:
 				rx_buf[rx_pos] = rx_now;	//目的子网ID
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 4:
 				rx_buf[rx_pos] = rx_now;	//源设备ID
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 5:				//这里该加地址校验
 				rx_buf[rx_pos] = rx_now;	//源子网ID
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 6:
 				rx_buf[rx_pos] = rx_now;	//分组长度
 				length = rx_now;
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 7:
 				rx_buf[rx_pos] = rx_now;	//转发网关子网ID
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 8:
 				rx_buf[rx_pos] = rx_now;	//分组序号
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 9:				//这里应该做命令类型校验（似乎和地址校验功能冲突）
 				rx_buf[rx_pos] = rx_now;	//命令大类
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 10:
 				rx_buf[rx_pos] = rx_now;	//命令小类
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 11:
 				rx_buf[rx_pos] = rx_now;	//命令结果
-				rx_step++；
+				rx_step++;
 				rx_pos ++;
 				break;
 			case 12:
@@ -177,7 +177,7 @@ void crc_check(void)
 	crc = 0xffff;
 	for (i = 0; i < rx_pos; i++)
 		calc_crc(rx_buf[i]);
-	if （crc == 0)
+	if (crc == 0)
 		filled = 1;
 	else
 		rx_rst();		//这里是否应该都执行rx_rst，因为若接收一帧后还未处理，又开始下一次接收？
