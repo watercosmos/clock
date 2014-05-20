@@ -1,29 +1,23 @@
-/* clock.c */
-#include <"clock.h">
-
-unsigned char tx_buf[20] = {'A', 'B', 'C', 'D'};
-unsigned char tx_num;
-unsigned char tx_pos;
-unsigned char tx_last;
-
-unsigned char rx_buf[20];
-unsigned char rx_step;
-unsigned char rx_pos;
-unsigned char rx_now;
-unsigned char crc;
+﻿/* clock.c */
+#include "time.h"
+#include "clock.h"
+#include "table.h"
+#include "timeapi.h"
 
 volatile unsigned char filled;
 volatile unsigned int  length;
 
 void sys_init(void);
-void delay_10ms(void);
 void start_tx(unsigned char num);
+void delay_10ms(void);
 void rx_rst(void);
 void crc_check(void);
 void calc_crc(unsigned char buf);
-
+void rx_handler(void)锛?
 void main(void)
 {
+	unsigned char i, j, task_seq;
+
 	/* 初始化 */
 	sys_init();
 	_SEI();
@@ -41,6 +35,22 @@ void main(void)
 		}
 		if (filled)
 			rx_handler();
+		/*
+		 *	遍历逻辑表
+		 *	若逻辑表项使能，序列存在，则将该序列按时间条件参数写入时间表
+		 *	并检查序列的场景数，根据各场景执行时间，将每个场景写入时间表
+		 *	即每个逻辑表项生效，向时间表内加入的条目数与执行序列场景数相等
+		 */
+		if (logic_num != 0)
+			for (i = 0; i < logic_num; i++) {
+				task_seq = logic_entry[i].function_type.task_seq;
+				if (logic_entry[i].enable == 1 && task_seq < task_num) {
+					//更新时间表
+					for (j = 0; j < task_entry[task_seq].scence_sum; j++){
+						//添加时间表项
+					}
+				}
+			}
 
 		/* 踢狗 */
 		WDI = 0;
@@ -60,11 +70,11 @@ __interrupt void uart0_rx_isr(void)
 	BUSY = 1;
 
 	/* 重启定时器1 */
-	TCCR1B = 0x00;			//停止定时器	
+	TCCR1B = 0x00;			//停止定时器
 	TCNT1H = DELAY_HI;		//设置延时参数, 以便侦听网络
 	TCNT1L = DELAY_LO;
-	TIMSK |= 0X04;			//定时器中断使能
-	TIFR  |= 0X04;			//清溢出标志
+	TIMSK |= 0x04;			//定时器中断使能	
+	TIFR  |= 0x04;			//清溢出标志
 	TCCR1B = 0x01;			//启动定时器
 
 	if (TX) {				//接收自己发出的数据
@@ -232,7 +242,90 @@ __interrupt void t1_ovf_isr(void)
 /* 接收帧处理函数 */
 void rx_handler(void)
 {
+	unsigned char i;
+	bool check = FALSE;
+
 	filled = 0;
+
+	if ((rx_buf[8] & 0x3F) == 0x03) {
+		/*
+		 *	接收到设置逻辑的命令
+		 *	命令小类 = 3
+		 *	若逻辑表已满，不做处理
+		 *	这里假设收到的帧的数据域就是一条完整的逻辑表项
+		 */
+		for (i = 0; i < logic_num; i++)
+			if ((rx_buf[11] & 0x7f) == logic_entry[i].logic_seq) {
+				check = TRUE;
+				break;
+			}
+		if (check && logic_entry[i].enable != 接收帧内逻辑的使能位) {
+			logic_entry[i].enable = 接收帧内逻辑的使能位;
+			logic_init(logic_entry[i]);
+		}
+		else if (logic_num < MAX_LOGIC_TABLE_SIZE) {	//新的逻辑，逻辑表未满，则加入逻辑表
+			memcpy(&logic_entry[logic_num], &rx_buf[10], sizeof(Logic_Entry));
+			logic_init(logic_entry[logic_num]);
+			logic_num++;
+		}
+	} else if ((rx_buf[8] & 0x3F) == 0x07 && task_num < MAX_TASK_TABLE_SIZE) {
+		/*
+		 *	接收到设置序列的命令
+		 *	命令小类 = 7
+		 *	若序列表已满，不做处理
+		 *	这里假设收到的帧的数据域就是一条完整的序列表项
+		 *	未考虑重复表项
+		 */
+		memcpy(&task_entry[task_num], &rx_buf[10], sizeof(Task_Entry));
+		task_num++;
+	}
+	rx_rst();
+}
+
+/* 逻辑初始函数，逻辑新增或使能位改变时触发 */
+void logic_init(Logic_Entry le)
+{
+	unsigned char i, ret;
+
+	if (le.enable == 0) {
+		//从时间表内删除该逻辑
+		for (i = 0; i < time_num; i++)
+			if (time_entry[i].logic_seq == le.logic_seq) {
+				del_time_entry(i);
+				i--;
+			}
+	} else {
+		I2CReadDate(now);
+		ret = time_cmp(now, le.cond2.start_time);
+		if (ret > 0) {
+			/*if (le.cond2.loop_flag == 0)		//单次任务
+				return;
+			else (le.cond2.loop_flag == 1) {	//循环任务
+				switch (le.cond2.loop_end_flag) {
+					case 1:		//以时间结束
+						ret = date_cmp(&now, le.cond2.end_date)
+						if (ret > 0)
+							return;
+					case 2:		//以循环次数结束
+						//
+					case 0:		//无结束
+					default:
+						switch (le.cond2.loop_unit) {
+							case 0:		//循环月
+								do {
+									if (now.month + le.cond2.interval)
+								}
+							case 1:		//循环周
+							case 2:		//循环日
+						}
+				}
+			}*/
+			return;
+		else if (ret < 0)
+			
+
+		}
+	}
 }
 
 /* 初始化函数 */
@@ -257,14 +350,14 @@ void sys_init(void)
 	UCSRA  = 0x00;
 	UCSRA |= 0x40;		//关键！！！
 	UCSRB  = 0xd8;		//使能接收 发送中断，使能接收，使能发送
-	
+
 	TCCR0  = 0x00;		//停止定时器
 	TCNT0  = 0x53;		//初始值
 	OCR0   = 0x52;		//匹配值
-	TIMSK |= 0x01;		//中断允许
-	TIFR  |= 0X01;
+	TIMSK |= 0x01;		///中断允许
+	TIFR  |= 0x01;
 	TCCR0  = 0x04;		//启动定时器
-	
+
 	TCCR2 = 0x00;		//停止定时器
 	ASSR  = 0x00;		//异步时钟模式
 	TCNT2 = 0x00;		//初始值
@@ -288,19 +381,28 @@ void delay_10ms(void)
 /* 开始发送 */
 void start_tx(unsigned char num)
 {
-	RS485EN = 1;			//使能发送	
+	RS485EN = 1;			//使能发送
 	UCSRA  |= 0x40;			//关键！！！
 	UCSRB  |= 0x08;
 	tx_num  = num;
 	UDR     = tx_buf[0];	//输出第1个数据
 	tx_last = tx_buf[0];	//保存发送的数据,以便检测冲突否
-	tx_pos  = 0;			//发送数据指针置0
-	TX      = 1;			//设置正在发送数据标志
-}
+	tx_pos  = 0;
+	TX      = 1;
 
 /* 接收重置 */
 void rx_rst(void)
 {
 	rx_step = 0;
 	rx_pos  = 0;
+}
+
+/* 计算时间表函数 */
+void calc_time(Time_Condition tc)
+{
+	if (tc.loop_flag == 0) {
+		//
+	} else {
+
+	}
 }
