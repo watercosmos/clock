@@ -1,4 +1,4 @@
-﻿/* clock.h */
+/* clock.h */
 #include "iom32.h"
 #include "ina90.h"
 #include "delay.h"
@@ -47,4 +47,3 @@ unsigned char rx_step;
 unsigned char rx_pos;
 unsigned char rx_now;
 unsigned char crc;
-Time now;

@@ -76,18 +76,31 @@ Logic_Entry logic_entry[MAX_LOGIC_TABLE_SIZE];		//逻辑表
 Time_Entry  time_entry [MAX_TIME_TABLE_SIZE];		//时间表
 Task_Entry  task_entry [MAX_TASK_TABLE_SIZE];		//序列表
 
-Logic_Entry *logic_table = logic_entry;
-Time_Entry  *time_table  = time_entry;
-Task_Entry  *task_table  = task_entry;
-
 unsigned char logic_num;	//逻辑表现有条目数
 unsigned char time_num;		//时间表现有条目数
 unsigned char task_num;		//序列表现有条目数
 
+/* 删除时间表项 */
 void del_time_entry(unsigned char x)
 {
 	unsigned char i;
 	for (i = x; i < (time_num - 1); i++)
 		* (time_entry + i) = * (time_entry + i + 1);
 	time_num--;
+}
+
+/* 添加时间表项 */
+void add_time_entry(Time_Condition tc)
+{
+	//
+}
+
+/* 由时间参数计算下一次触发时间 */
+void calc_time(Time_Condition tc)
+{
+	if (tc.loop_flag == 0) {
+		//
+	} else {
+		//
+	}
 }

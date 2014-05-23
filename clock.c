@@ -1,6 +1,6 @@
 ﻿/* clock.c */
-#include "time.h"
 #include "clock.h"
+#include "time.h"
 #include "table.h"
 #include "timeapi.h"
 
@@ -13,7 +13,8 @@ void delay_10ms(void);
 void rx_rst(void);
 void crc_check(void);
 void calc_crc(unsigned char buf);
-void rx_handler(void)锛?
+void rx_handler(void);
+
 void main(void)
 {
 	unsigned char i, j, task_seq;
@@ -26,6 +27,8 @@ void main(void)
 
 	/*
 	 *	主循环
+	 *
+	 *	收帧处理
 	 *	逻辑表自查
 	 */
 	while (1) {
@@ -33,24 +36,28 @@ void main(void)
 			start_tx(4);
 			TOTX = 0;
 		}
+		/*
+		 *	收帧处理
+		 *
+		 *	完成逻辑表设置帧处理
+		 *	包括添加逻辑表和修改逻辑表使能状态
+		 *	若逻辑使能，序列存在
+		 *	则将该逻辑下一次触发时间写入时间表
+		 */
 		if (filled)
 			rx_handler();
 		/*
 		 *	遍历逻辑表
-		 *	若逻辑表项使能，序列存在，则将该序列按时间条件参数写入时间表
-		 *	并检查序列的场景数，根据各场景执行时间，将每个场景写入时间表
-		 *	即每个逻辑表项生效，向时间表内加入的条目数与执行序列场景数相等
+		 *	
+		 *	若逻辑表触发
+		 *	则向继电器发帧
+		 *	若序列完成，则计算下一次触发时间，写入时间表
 		 */
-		if (logic_num != 0)
-			for (i = 0; i < logic_num; i++) {
-				task_seq = logic_entry[i].function_type.task_seq;
-				if (logic_entry[i].enable == 1 && task_seq < task_num) {
-					//更新时间表
-					for (j = 0; j < task_entry[task_seq].scence_sum; j++){
-						//添加时间表项
-					}
-				}
+		for (i = 0; i < logic_num; i++) {
+			if (logic_entry[i].trigger == 1) {
+				//组帧发往继电器
 			}
+		}
 
 		/* 踢狗 */
 		WDI = 0;
@@ -268,7 +275,7 @@ void rx_handler(void)
 			logic_init(logic_entry[logic_num]);
 			logic_num++;
 		}
-	} else if ((rx_buf[8] & 0x3F) == 0x07 && task_num < MAX_TASK_TABLE_SIZE) {
+	} else if ((rx_buf[8] & 0x3F) == 0x07) {
 		/*
 		 *	接收到设置序列的命令
 		 *	命令小类 = 7
@@ -276,8 +283,8 @@ void rx_handler(void)
 		 *	这里假设收到的帧的数据域就是一条完整的序列表项
 		 *	未考虑重复表项
 		 */
-		memcpy(&task_entry[task_num], &rx_buf[10], sizeof(Task_Entry));
-		task_num++;
+		/*memcpy(&task_entry[task_num], &rx_buf[10], sizeof(Task_Entry));
+		task_num++;*/
 	}
 	rx_rst();
 }
@@ -285,7 +292,8 @@ void rx_handler(void)
 /* 逻辑初始函数，逻辑新增或使能位改变时触发 */
 void logic_init(Logic_Entry le)
 {
-	unsigned char i, ret;
+	unsigned char i;
+	int ret;
 
 	if (le.enable == 0) {
 		//从时间表内删除该逻辑
@@ -319,11 +327,11 @@ void logic_init(Logic_Entry le)
 							case 2:		//循环日
 						}
 				}
-			}*/
-			return;
-		else if (ret < 0)
-			
-
+			}
+			return;*/
+		}
+		else if (ret < 0) {
+			//
 		}
 	}
 }
@@ -395,14 +403,4 @@ void rx_rst(void)
 {
 	rx_step = 0;
 	rx_pos  = 0;
-}
-
-/* 计算时间表函数 */
-void calc_time(Time_Condition tc)
-{
-	if (tc.loop_flag == 0) {
-		//
-	} else {
-
-	}
 }

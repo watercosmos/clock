@@ -10,8 +10,10 @@ typedef struct
 	unsigned char second;
 } Time;
 
+Time now;
+
 /* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
-unsigned char time_cmp(Time t1, Time t2)
+int time_cmp(Time t1, Time t2)
 {
 	if (t1.year != t2.year)
 		return t1.year - t2.year;
@@ -30,7 +32,7 @@ unsigned char time_cmp(Time t1, Time t2)
 }
 
 /* 日期比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
-unsigned char date_cmp(void * d1, void * d2)
+int date_cmp(void * d1, void * d2)
 {
 	if (*(unsigned char *)d1 != *(unsigned char *)d2)
 		return *(unsigned char *)d1 - *(unsigned char *)d2;
