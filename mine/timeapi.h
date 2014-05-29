@@ -4,6 +4,7 @@
 #define  uint  unsigned int
 #define  ulong unsigned long
 
+void date_to_time(uchar date[],Time t);
 void WriteTimeOn(void);
 void WriteTimeOff(void);
 
@@ -232,6 +233,7 @@ void I2CReadDate(uchar a[])
                         
 		}
 	}
+	date_to_time(date,times);
 	I2CNoAck();
 	delay_1us();
 	I2CStop();
@@ -318,8 +320,20 @@ void WriteTimeOff(void)
 	I2CStop(); 
 }
 
+//将读出的时间数组写入时间结构中
+void date_to_time(uchar date[],Time t)
+{
+  t.second=date[0];
+  t.minute=date[1];
+  t.hour=date[2];
+  t.week=date[3];
+  t.day=date[4];
+  t.month=date[5];
+  t.year=date[6];
+}
+
 //test
-void w_and_r()
+/*void w_and_r()
 {
   WriteTimeOn();
 
@@ -345,7 +359,7 @@ void w_and_r()
 	delay_1us();
 	I2CStop();
 }
-
+*/
 //========================================================================= 
 /*void main(void)
 {  

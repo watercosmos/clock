@@ -1,7 +1,7 @@
 /* clock.h */
-#include "iom32.h"
+#include "iom64.h"
 #include "ina90.h"
-#include "delay.h"
+//#include "delay.h"
 #include "stdlib.h"
 
 #define BAUDRATE	9600			//波特率
@@ -11,8 +11,8 @@
 #define DELAY_LO	0x66
 #define TWO_MS		2000			//2ms延时参数
 
-#define RS485EN		PORTC_Bit1
-#define WDI			PORTC_Bit0		//踢狗
+#define RS485EN		PORTC_Bit2
+#define WDI			PORTC_Bit3		//踢狗
 
 struct
 {

@@ -1,7 +1,7 @@
 /* 逻辑表内的其他三个预留条件参数 */
-typedef struct {} Condition1;
+/*typedef struct {} Condition1;
 typedef struct {} Condition3;
-typedef struct {} Condition4;
+typedef struct {} Condition4;*/
 
 /* 时间条件参数 16字节*/
 typedef struct
@@ -12,7 +12,7 @@ typedef struct
 	unsigned char loop_end_flag:2;		//循环结束标识
 	unsigned char interval;				//循环间隔
 	unsigned char loop_num;				//循环次数
-	Time          start_time[3];		//开始时间
+	Time          start_time;		//开始时间
 	unsigned char end_date[4];			//结束日期
 	unsigned char day_in_week;			//周中哪天
 	unsigned char day_in_month:5;		//月中哪天
@@ -64,10 +64,10 @@ typedef struct
 	unsigned char cond3_enable:1;		//条件2触发位
 	unsigned char cond2_enable:1;		//条件3触发位
 	unsigned char cond1_enable:1;		//条件4触发位
-	Condition1      cond1;				//条件1参数
+	//Condition1      cond1;				//条件1参数
 	Time_Condition  cond2;				//条件2参数
-	Condition3      cond3;				//条件3参数
-	Condition4      cond4;				//条件4参数
+	//Condition3      cond3;				//条件3参数
+	//Condition4      cond4;				//条件4参数
 	unsigned char function_type;		//功能类型（未使用）
 	Func_Para fp;						//功能参数
 } Logic_Entry;

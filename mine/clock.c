@@ -85,7 +85,7 @@ __interrupt void uart0_rx_isr(void)
 	TCCR1B = 0x01;			//启动定时器
 
 	if (TX) {				//接收自己发出的数据
-		rx = UDR;
+		rx = UDR0;
 		TX = 0;
 		if (rx != tx_last) {
 			UCSRB     &= 0xF7;					//发生冲突, 停止发送
@@ -100,7 +100,7 @@ __interrupt void uart0_rx_isr(void)
 			COLLISION  = 1;
 		}
 	} else {				//接收其他模块数据
-		rx_now = UDR;
+		rx_now = UDR0;
 		switch (rx_step) {
 			case 0:
 				if (rx_now == 0xAA) {
@@ -217,12 +217,12 @@ void calc_crc(unsigned char buf)
 }
 
 /* 发送中断 */
-#pragma vector=USART_TXC_vect
+#pragma vector=USART0_TXC_vect
 __interrupt void uart0_tx_isr(void)
 {
 	tx_pos++;
 	if (tx_pos < tx_num) {				//若一帧未发完，继续发下一字节
-		UDR     = tx_buf[tx_pos];
+		UDR0    = tx_buf[tx_pos];
 		tx_last = tx_buf[tx_pos];
 		TX = 1;
 	} else {
@@ -360,23 +360,26 @@ void sys_init(void)
 {
 	_CLI();
 
+	DDRE != 0x64;
+	DDRE != 0x08; 
+
 	/* IO口初始化 */
-	DDRA  = 0x00;		//A口为键盘输入口
+	/*DDRA  = 0x00;		//A口为键盘输入口
 	PORTA = 0xFF;
 	DDRB  = 0xFF;		//B口为按键灯输出控制
 	PORTB = 0x00;
 	DDRC  = 0xC3;		//C口为踢狗，485使能，外接存储器口
 	PORTC = 0x00;
 	DDRD  = 0xF2;		//D口高四位控制灯 pwm，低为串口，外中断
-	PORTD = 0x00;
+	PORTD = 0x00;*/
 
-	/* USART 初始化 */
-	UCSRC  = 0x06;		//USART 9600 8, n,1无倍速
-	UBRRL  = (F_CPU/BAUDRATE/16-1)%256;	//U2X=0时的公式计算
-	UBRRH  = (F_CPU/BAUDRATE/16-1)/256;
-	UCSRA  = 0x00;
-	UCSRA |= 0x40;		//关键！！！
-	UCSRB  = 0xd8;		//使能接收 发送中断，使能接收，使能发送
+	/* USART0 初始化 */
+	UCSR0C  = 0x06;		//USART0 9600 8, n,1无倍速
+	UBRR0L  = (F_CPU/BAUDRATE/16-1)%256;	//U2X=0时的公式计算
+	UBRR0H  = (F_CPU/BAUDRATE/16-1)/256;
+	UCSR0A  = 0x00;
+	UCSR0A |= 0x40;		//关键！！！
+	UCSR0B  = 0xd8;		//使能接收 发送中断，使能接收，使能发送
 
 	TCCR0  = 0x00;		//停止定时器
 	TCNT0  = 0x53;		//初始值
@@ -386,10 +389,12 @@ void sys_init(void)
 	TCCR0  = 0x04;		//启动定时器
 
 	TCCR2 = 0x00;		//停止定时器
-	ASSR  = 0x00;		//异步时钟模式
+	/*ASSR  = 0x00;		//异步时钟模式
 	TCNT2 = 0x00;		//初始值
 	OCR2  = 0x1e;		//匹配值
-	TCCR2 = 0x7D;		//启动定时器
+	TCCR2 = 0x7D;		//启动定时器*/
+	TIMSK &= 0x3F;
+
 	//这里为什么要初始化rx_buf[7]和filled？？？？？？？？？？？
 	BUSY      = 0;
 	TX        = 0;
@@ -409,10 +414,10 @@ void delay_10ms(void)
 void start_tx(unsigned char num)
 {
 	RS485EN = 1;			//使能发送
-	UCSRA  |= 0x40;			//关键！！！
-	UCSRB  |= 0x08;
+	UCSR0A  |= 0x40;			//关键！！！
+	UCSR0B  |= 0x08;
 	tx_num  = num;
-	UDR     = tx_buf[0];	//输出第1个数据
+	UDR0     = tx_buf[0];	//输出第1个数据
 	tx_last = tx_buf[0];	//保存发送的数据,以便检测冲突否
 	tx_pos  = 0;
 	TX      = 1;
