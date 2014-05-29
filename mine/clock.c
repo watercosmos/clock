@@ -1,6 +1,6 @@
 ﻿/* clock.c */
-#include "clock.h"
 #include "time.h"
+#include "clock.h"
 #include "table.h"
 #include "timeapi.h"
 
@@ -67,7 +67,7 @@ void main(void)
 }
 
 /* 接收中断 */
-#pragma vector=USART_RXC_vect
+#pragma vector=USART0_RXC_vect
 __interrupt void uart0_rx_isr(void)
 {
 	
@@ -88,7 +88,7 @@ __interrupt void uart0_rx_isr(void)
 		rx = UDR0;
 		TX = 0;
 		if (rx != tx_last) {
-			UCSRB     &= 0xF7;					//发生冲突, 停止发送
+			UCSR0B    &= 0xF7;					//发生冲突, 停止发送
 			PORTD_Bit1 = 1;						//发送口停止
 			backoff    = rand()/3 + TWO_MS;		//得到一个不小于2ms的随机延时参数
 			backoff    = 0xffff - backoff;
@@ -182,6 +182,7 @@ __interrupt void uart0_rx_isr(void)
 				break;
 			default:
 				rx_rst();
+		}
 	}
 
 }
@@ -253,15 +254,15 @@ __interrupt void t1_ovf_isr(void)
  *	一旦有匹配项，则将那条逻辑trigger置1
  *	并从时间表内删除该时间表项，确保时间表内无过时项
  */
-#pragma
+/*#pragma
 __interrupt void time_isr(void)
-{}
+{}*/
 
 /* 接收帧处理函数 */
 void rx_handler(void)
 {
 	unsigned char i;
-	bool check = FALSE;
+	//bool check = FALSE;
 
 	filled = 0;
 
@@ -274,7 +275,7 @@ void rx_handler(void)
 		 *	若收到的逻辑表项已存在，且使能位有改变，则调用logic_init()
 		 *	若不存在，则加入到逻辑表，也调用logic_init()
 		 */
-		for (i = 0; i < logic_num; i++)
+		/*for (i = 0; i < logic_num; i++)
 			if ((rx_buf[11] & 0x7f) == logic_entry[i].logic_seq) {
 				check = TRUE;
 				break;
@@ -287,7 +288,7 @@ void rx_handler(void)
 			memcpy(&logic_entry[logic_num], &rx_buf[10], sizeof(Logic_Entry));
 			logic_init(logic_entry[logic_num]);
 			logic_num++;
-		}
+		}*/
 	} else if ((rx_buf[8] & 0x3F) == 0x07) {
 		/*
 		 *	接收到设置序列的命令
@@ -309,7 +310,7 @@ void rx_handler(void)
  *	若使能位为1，则对比当前时间和时间参数内的开始时间
  *	并确定下一次该逻辑触发时间，一次性将所有步骤（场景）全部写入时间表
  */
-void logic_init(Logic_Entry le)
+/*void logic_init(Logic_Entry le)
 {
 	unsigned char i;
 	int ret;
@@ -324,7 +325,7 @@ void logic_init(Logic_Entry le)
 	} else {
 		I2CReadDate(now);
 		ret = time_cmp(now, le.cond2.start_time);
-		if (ret > 0) {
+		if (ret > 0) {*/
 			/*if (le.cond2.loop_flag == 0)		//单次任务
 				return;
 			else (le.cond2.loop_flag == 1) {	//循环任务
@@ -348,12 +349,12 @@ void logic_init(Logic_Entry le)
 				}
 			}
 			return;*/
-		}
+/*		}
 		else if (ret < 0) {
 			//
 		}
 	}
-}
+}*/
 
 /* 初始化函数 */
 void sys_init(void)
@@ -361,7 +362,7 @@ void sys_init(void)
 	_CLI();
 
 	DDRE != 0x64;
-	DDRE != 0x08; 
+	DDRF != 0x08; 
 
 	/* IO口初始化 */
 	/*DDRA  = 0x00;		//A口为键盘输入口
@@ -421,6 +422,7 @@ void start_tx(unsigned char num)
 	tx_last = tx_buf[0];	//保存发送的数据,以便检测冲突否
 	tx_pos  = 0;
 	TX      = 1;
+}
 
 /* 接收重置 */
 void rx_rst(void)

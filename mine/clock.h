@@ -31,8 +31,8 @@ struct
 #define COLLISION	FlagByte.bit2	//冲突等待标志
 #define TOTX		FlagByte.bit3	//请求发送标志
 
-#define MAX_RX_BUF_SIZE			20
-#define MAX_TX_BUF_SIZE			20
+#define MAX_RX_BUF_SIZE			40
+#define MAX_TX_BUF_SIZE			40
 #define MAX_LOGIC_TABLE_SIZE	20
 #define MAX_TIME_TABLE_SIZE		20
 #define MAX_TASK_TABLE_SIZE		18
@@ -47,3 +47,5 @@ unsigned char rx_step;
 unsigned char rx_pos;
 unsigned char rx_now;
 unsigned char crc;
+
+Time now;

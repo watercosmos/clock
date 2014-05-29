@@ -217,7 +217,7 @@ uchar I2CReceiveByte(void) 		//数据从高位到低位//
 
 
 /******读SD2400实时数据寄存器******/
-void I2CReadDate(uchar a[])
+void I2CReadDate(Time times)
 {
 	uchar n;
 	I2CStart();
@@ -226,7 +226,6 @@ void I2CReadDate(uchar a[])
 	for(n=0;n<7;n++)
 	{
 		date[n]=I2CReceiveByte();
-                a[n]=date[n];
 		if (n<6)        	 //最后一个数据不应答
 		{
 			I2CAck();
@@ -249,7 +248,7 @@ void I2CWriteDate(uchar times[7])
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x00);		//设置写起始地址      
+    I2CSendByte(0x00);			//设置写起始地址      
 	I2CWaitAck();	
 	I2CSendByte(times[0]);		// second     
 	I2CWaitAck();	
@@ -286,7 +285,7 @@ void WriteTimeOn(void)
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x10);		//设置写地址10H      
+    I2CSendByte(0x10);		//设置写地址10H      
 	I2CWaitAck();	
 	I2CSendByte(0x80);		//置WRTC1=1      
 	I2CWaitAck();
@@ -295,7 +294,7 @@ void WriteTimeOn(void)
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x0F);		//设置写地址0FH      
+    I2CSendByte(0x0F);		//设置写地址0FH      
 	I2CWaitAck();	
 	I2CSendByte(0x84);		//置WRTC2,WRTC3=1      
 	I2CWaitAck();
