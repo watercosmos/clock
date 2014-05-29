@@ -51,7 +51,7 @@ void main(void)
 		 *	
 		 *	若逻辑表触发
 		 *	则向继电器发帧
-		 *	若序列完成，则计算下一次触发时间，写入时间表
+		 *	若序列完成(功能参数中的步骤号为最后一步)，则计算下一次触发时间，写入时间表
 		 */
 		for (i = 0; i < logic_num; i++) {
 			if (logic_entry[i].trigger == 1) {
@@ -246,6 +246,17 @@ __interrupt void t1_ovf_isr(void)
 	}
 }
 
+
+/*	时间中断
+ *
+ *	对比当前时间和时间表内各项的时间
+ *	一旦有匹配项，则将那条逻辑trigger置1
+ *	并从时间表内删除该时间表项，确保时间表内无过时项
+ */
+#pragma
+__interrupt void time_isr(void)
+{}
+
 /* 接收帧处理函数 */
 void rx_handler(void)
 {
@@ -260,13 +271,15 @@ void rx_handler(void)
 		 *	命令小类 = 3
 		 *	若逻辑表已满，不做处理
 		 *	这里假设收到的帧的数据域就是一条完整的逻辑表项
+		 *	若收到的逻辑表项已存在，且使能位有改变，则调用logic_init()
+		 *	若不存在，则加入到逻辑表，也调用logic_init()
 		 */
 		for (i = 0; i < logic_num; i++)
 			if ((rx_buf[11] & 0x7f) == logic_entry[i].logic_seq) {
 				check = TRUE;
 				break;
 			}
-		if (check && logic_entry[i].enable != 接收帧内逻辑的使能位) {
+		if (check && logic_entry[i].enable != 接收帧内逻辑的使能位) {//伪码!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			logic_entry[i].enable = 接收帧内逻辑的使能位;
 			logic_init(logic_entry[i]);
 		}
@@ -289,7 +302,13 @@ void rx_handler(void)
 	rx_rst();
 }
 
-/* 逻辑初始函数，逻辑新增或使能位改变时触发 */
+/*
+ *	逻辑初始函数，逻辑新增或使能位改变时触发
+ *
+ *	若使能位为0，则从时间表内删除该逻辑
+ *	若使能位为1，则对比当前时间和时间参数内的开始时间
+ *	并确定下一次该逻辑触发时间，一次性将所有步骤（场景）全部写入时间表
+ */
 void logic_init(Logic_Entry le)
 {
 	unsigned char i;

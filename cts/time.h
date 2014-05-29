@@ -1,4 +1,4 @@
-/* 鏃堕棿 7瀛楄妭 */
+/* 时间 7字节 */
 typedef struct
 {
 	unsigned char year;
@@ -10,9 +10,7 @@ typedef struct
 	unsigned char second;
 } Time;
 
-Time now;
-
-/* 鏃堕棿姣旇緝鍑芥暟锛宼1鏃╁垯杩斿洖璐熸暟锛屾櫄鍒欒繑鍥炴鏁帮紝鐩哥瓑杩斿洖0 */
+/* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
 int time_cmp(Time t1, Time t2)
 {
 	if (t1.year != t2.year)
@@ -31,7 +29,8 @@ int time_cmp(Time t1, Time t2)
 		return 0;
 }
 
-/* 鏃ユ湡姣旇緝鍑芥暟锛宼1鏃╁垯杩斿洖璐熸暟锛屾櫄鍒欒繑鍥炴鏁帮紝鐩哥瓑杩斿洖0 */
+/* 日期比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
+/*
 int date_cmp(void * d1, void * d2)
 {
 	if (*(unsigned char *)d1 != *(unsigned char *)d2)
@@ -45,3 +44,4 @@ int date_cmp(void * d1, void * d2)
 		return *(unsigned char *)(d1 + 2 * sizeof(unsigned char)) - \
 			 *(unsigned char *)(d1 + 2 * sizeof(unsigned char));
 }
+*/
