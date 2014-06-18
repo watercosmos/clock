@@ -1,4 +1,4 @@
-#include <iom64a.h>
+ï»¿#include <iom64a.h>
 #include <iomacro.h >
 #define  uchar unsigned char
 #define  uint  unsigned int
@@ -8,18 +8,18 @@ void date_to_time(uchar date[],Time t);
 void WriteTimeOn(void);
 void WriteTimeOff(void);
 
-//Êý¾ÝsdaµÄÎ»ÉèÖÃ
-#define sda_in	    DDRF &= 0xFD	      //Êý¾ÝÉèÖÃÊäÈë
-#define sda_out	    DDRF |= 0x02	      //Êý¾ÝÉèÖÃÊä³ö
-#define sda_setb    PORTF |= 0x02      //Êý¾ÝÀ­¸ß      
-#define sda_clr     PORTF &= 0xFD      //Êý¾ÝÀ­µÍ      
-#define sda_r       PINF & (0x02 )        //Êý¾Ý¶ÁÈ¡  
-//Ê±ÖÓsclµÄÎ»ÉèÖÃ
-#define scl_in	    DDRF &= 0xFE      //Ê±ÖÓÉèÖÃÊäÈë
-#define scl_out	    DDRF |= 0x01      //Ê±ÖÓÉèÖÃÊä³ö
-#define scl_setb    PORTF |= 0x01       //Ê±ÖÓÀ­¸ß      
-#define scl_clr     PORTF &= 0xFE     //Ê±ÖÓÀ­µÍ      
-#define scl_r       PINF & (0x01)         //Ê±ÖÓ¶ÁÈ¡ 
+//æ•°æ®sdaçš„ä½è®¾ç½®
+#define sda_in	    DDRF &= 0xFD	      //æ•°æ®è®¾ç½®è¾“å…¥
+#define sda_out	    DDRF |= 0x02	      //æ•°æ®è®¾ç½®è¾“å‡º
+#define sda_setb    PORTF |= 0x02      //æ•°æ®æ‹‰é«˜      
+#define sda_clr     PORTF &= 0xFD      //æ•°æ®æ‹‰ä½Ž      
+#define sda_r       PINF & (0x02 )        //æ•°æ®è¯»å–  
+//æ—¶é’Ÿsclçš„ä½è®¾ç½®
+#define scl_in	    DDRF &= 0xFE      //æ—¶é’Ÿè®¾ç½®è¾“å…¥
+#define scl_out	    DDRF |= 0x01      //æ—¶é’Ÿè®¾ç½®è¾“å‡º
+#define scl_setb    PORTF |= 0x01       //æ—¶é’Ÿæ‹‰é«˜      
+#define scl_clr     PORTF &= 0xFE     //æ—¶é’Ÿæ‹‰ä½Ž      
+#define scl_r       PINF & (0x01)         //æ—¶é’Ÿè¯»å– 
 //===============
 #define true  1
 #define false 0
@@ -28,8 +28,8 @@ uchar   date[7];
 
 
 //====================================================================
-/*ÑÓÊ±×Ó³ÌÐò*/
-void delay_ms(uint time)    	       //11.0592M,time=1±íÊ¾ÑÓÊ±1ms
+/*å»¶æ—¶å­ç¨‹åº*/
+void delay_ms(uint time)    	       //11.0592M,time=1è¡¨ç¤ºå»¶æ—¶1ms
 {
  uint i;
  for(;time>0;time--)
@@ -38,11 +38,11 @@ void delay_ms(uint time)    	       //11.0592M,time=1±íÊ¾ÑÓÊ±1ms
   asm("nop");
   asm("nop");
 }
-void delay_1us(void)        	       //11.0592M, 1usÑÓÊ±º¯Êý
+void delay_1us(void)        	       //11.0592M, 1uså»¶æ—¶å‡½æ•°
   {
    asm("nop");
   }
-void delay_us(uint time)     	       //11.0592M, NusÑÓÊ±º¯Êý
+void delay_us(uint time)     	       //11.0592M, Nuså»¶æ—¶å‡½æ•°
   {
    uint i;
    for (i=0;i<time;i++)
@@ -51,7 +51,7 @@ void delay_us(uint time)     	       //11.0592M, NusÑÓÊ±º¯Êý
 //=====================================================================  
 
 
-/********¿ªÆôSD2400µÄI2C×ÜÏß********/
+/********å¼€å¯SD2400çš„I2Cæ€»çº¿********/
 uchar I2CStart(void)
 {
     	sda_out;
@@ -62,14 +62,14 @@ uchar I2CStart(void)
 	delay_us(5);
 	sda_in;
 	delay_us(5);
-	if(!sda_r)return false;		//SDAÏßÎªµÍµçÆ½Ôò×ÜÏßÃ¦,ÍË³ö
+	if(!sda_r)return false;		//SDAçº¿ä¸ºä½Žç”µå¹³åˆ™æ€»çº¿å¿™,é€€å‡º
 	sda_out;
 	delay_1us();
 	sda_clr;	
 	delay_us(10);
 	sda_in;    	
 	delay_us(10);
-	while(sda_r)return false;	//SDAÏßÎª¸ßµçÆ½Ôò×ÜÏß³ö´í,ÍË³ö
+	while(sda_r)return false;	//SDAçº¿ä¸ºé«˜ç”µå¹³åˆ™æ€»çº¿å‡ºé”™,é€€å‡º
 	scl_clr;	
 	delay_us(5);
 	return true;
@@ -77,7 +77,7 @@ uchar I2CStart(void)
 }
 
 
-//********¹Ø±ÕSD2400µÄI2C×ÜÏß****//
+//********å…³é—­SD2400çš„I2Cæ€»çº¿****//
 void I2CStop(void)
 {
     scl_out;
@@ -93,7 +93,7 @@ void I2CStop(void)
 }
 
 
-//*********·¢ËÍ ACK****//
+//*********å‘é€ ACK****//
 void I2CAck(void)
 {	
     scl_out;
@@ -112,7 +112,7 @@ void I2CAck(void)
 }
 
 
-/*********·¢ËÍNO ACK*********/
+/*********å‘é€NO ACK*********/
 void I2CNoAck(void)
 {	
     scl_out;
@@ -129,8 +129,8 @@ void I2CNoAck(void)
 
 
 
-//*********¶ÁÈ¡ACKÐÅºÅ*********
-uchar I2CWaitAck(void) 			 //·µ»ØÎª:1=ÓÐACK,0=ÎÞACK
+//*********è¯»å–ACKä¿¡å·*********
+uchar I2CWaitAck(void) 			 //è¿”å›žä¸º:1=æœ‰ACK,0=æ— ACK
 {
 	uchar errtime=255;
 	scl_out;
@@ -157,8 +157,8 @@ uchar I2CWaitAck(void) 			 //·µ»ØÎª:1=ÓÐACK,0=ÎÞACK
 }
 
 
-/************MCUÏòSD2400·¢ËÍÒ»¸ö×Ö½Ú*************/             
-void I2CSendByte(uchar demand)		 //Êý¾Ý´Ó¸ßÎ»µ½µÍÎ»
+/************MCUå‘SD2400å‘é€ä¸€ä¸ªå­—èŠ‚*************/             
+void I2CSendByte(uchar demand)		 //æ•°æ®ä»Žé«˜ä½åˆ°ä½Žä½
 {
 	uchar bd=8;                                                        
 	sda_out;
@@ -186,22 +186,22 @@ void I2CSendByte(uchar demand)		 //Êý¾Ý´Ó¸ßÎ»µ½µÍÎ»
 }
 
 
-/*********MCU´ÓSD2400¶ÁÈëÒ»×Ö½Ú*********/
-uchar I2CReceiveByte(void) 		//Êý¾Ý´Ó¸ßÎ»µ½µÍÎ»//
+/*********MCUä»ŽSD2400è¯»å…¥ä¸€å­—èŠ‚*********/
+uchar I2CReceiveByte(void) 		//æ•°æ®ä»Žé«˜ä½åˆ°ä½Žä½//
 {
 	uchar bl=8;
 	uchar ddata=0;
 	scl_out;
 	delay_1us();
 	delay_1us();
-	sda_in;			 	//c51ÖÐÎªSDA=1;¶Ë¿ÚÇÐ»»ÎªÊäÈë×´Ì¬£¡£¡
+	sda_in;			 	//c51ä¸­ä¸ºSDA=1;ç«¯å£åˆ‡æ¢ä¸ºè¾“å…¥çŠ¶æ€ï¼ï¼
 	delay_1us();
 	while(bl--)
 	{
-		ddata<<=1;              //Êý¾Ý´Ó¸ßÎ»¿ªÊ¼¶ÁÈ¡
+		ddata<<=1;              //æ•°æ®ä»Žé«˜ä½å¼€å§‹è¯»å–
 		delay_1us();
 		scl_clr;
-		delay_us(5);	        //´Ó¸ßÎ»¿ªÊ¼ ddata|=SDA;ddata<<=1
+		delay_us(5);	        //ä»Žé«˜ä½å¼€å§‹ ddata|=SDA;ddata<<=1
 		scl_setb;
 		delay_us(5);	
 		if(sda_r)
@@ -216,7 +216,7 @@ uchar I2CReceiveByte(void) 		//Êý¾Ý´Ó¸ßÎ»µ½µÍÎ»//
 }
 
 
-/******¶ÁSD2400ÊµÊ±Êý¾Ý¼Ä´æÆ÷******/
+/******è¯»SD2400å®žæ—¶æ•°æ®å¯„å­˜å™¨******/
 void I2CReadDate(Time times)
 {
 	uchar n;
@@ -226,21 +226,21 @@ void I2CReadDate(Time times)
 	for(n=0;n<7;n++)
 	{
 		date[n]=I2CReceiveByte();
-		if (n<6)        	 //×îºóÒ»¸öÊý¾Ý²»Ó¦´ð
+		if (n<6)        	 //æœ€åŽä¸€ä¸ªæ•°æ®ä¸åº”ç­”
 		{
 			I2CAck();
                         
 		}
 	}
-        date_to_time(date,times);
+	date_to_time(date,times);
 	I2CNoAck();
 	delay_1us();
 	I2CStop();
 }
 
 
-/******Ð´SD2400ÊµÊ±Êý¾Ý¼Ä´æÆ÷******/
-void I2CWriteDate(uchar times[7])
+/******å†™SD2400å®žæ—¶æ•°æ®å¯„å­˜å™¨******/
+void I2CWriteDate(Time times)
 {		
 
         WriteTimeOn();
@@ -248,30 +248,30 @@ void I2CWriteDate(uchar times[7])
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x00);		//ÉèÖÃÐ´ÆðÊ¼µØÖ·      
+    	I2CSendByte(0x00);		//è®¾ç½®å†™èµ·å§‹åœ°å€      
 	I2CWaitAck();	
-	I2CSendByte(times[0]);		// second     
+	I2CSendByte(times.second);		// second     
 	I2CWaitAck();	
-	I2CSendByte(times[1]);		//minute      
+	I2CSendByte(times.minute);		//minute      
 	I2CWaitAck();	
-	I2CSendByte(times[2]);		//hour ,¶þÊ®ËÄÐ¡Ê±ÖÆ     
+	I2CSendByte(times.hour);		//hour ,äºŒåå››å°æ—¶åˆ¶     
 	I2CWaitAck();	
-	I2CSendByte(times[3]);		//week      
+	I2CSendByte(times.week);		//week      
 	I2CWaitAck();	
-	I2CSendByte(times[4]);		//day      
+	I2CSendByte(times.day);		//day      
 	I2CWaitAck();	
-	I2CSendByte(times[5]);		//month      
+	I2CSendByte(times.month);		//month      
 	I2CWaitAck();	
-	I2CSendByte(times[6]);		//year      
+	I2CSendByte(times.year);		//year      
 	I2CWaitAck();	
 	I2CStop();
 
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x12);		//ÉèÖÃÐ´ÆðÊ¼µØÖ·      
+    	I2CSendByte(0x12);		//è®¾ç½®å†™èµ·å§‹åœ°å€      
 	I2CWaitAck();		
-    	I2CSendByte(0x00);		//ÇåÁãÊý×Öµ÷Õû¼Ä´æÆ÷      
+    	I2CSendByte(0x00);		//æ¸…é›¶æ•°å­—è°ƒæ•´å¯„å­˜å™¨      
 	I2CWaitAck();        
 	I2CStop();  
 	
@@ -279,47 +279,47 @@ void I2CWriteDate(uchar times[7])
 }
 
 
-/******Ð´SD2400ÔÊÐí³ÌÐò******/
+/******å†™SD2400å…è®¸ç¨‹åº******/
 void WriteTimeOn(void)
 {		
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x10);		//ÉèÖÃÐ´µØÖ·10H      
+    	I2CSendByte(0x10);		//è®¾ç½®å†™åœ°å€10H      
 	I2CWaitAck();	
-	I2CSendByte(0x80);		//ÖÃWRTC1=1      
+	I2CSendByte(0x80);		//ç½®WRTC1=1      
 	I2CWaitAck();
 	I2CStop(); 
 	
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x0F);		//ÉèÖÃÐ´µØÖ·0FH      
+    	I2CSendByte(0x0F);		//è®¾ç½®å†™åœ°å€0FH      
 	I2CWaitAck();	
-	I2CSendByte(0x84);		//ÖÃWRTC2,WRTC3=1      
+	I2CSendByte(0x84);		//ç½®WRTC2,WRTC3=1      
 	I2CWaitAck();
 	I2CStop(); 
 	
 }
 
 
-/******Ð´SD2400½ûÖ¹³ÌÐò******/
+/******å†™SD2400ç¦æ­¢ç¨‹åº******/
 void WriteTimeOff(void)
 {		
 	
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-   	I2CSendByte(0x0F);		//ÉèÖÃÐ´µØÖ·0FH      
+   	I2CSendByte(0x0F);		//è®¾ç½®å†™åœ°å€0FH      
 	I2CWaitAck();	
-	I2CSendByte(0x0) ;		//ÖÃWRTC2,WRTC3=0      
+	I2CSendByte(0x0) ;		//ç½®WRTC2,WRTC3=0      
 	I2CWaitAck();
-	I2CSendByte(0x0) ;		//ÖÃWRTC1=0(10HµØÖ·)      
+	I2CSendByte(0x0) ;		//ç½®WRTC1=0(10Håœ°å€)      
 	I2CWaitAck();
 	I2CStop(); 
 }
 
-//½«¶Á³öµÄÊ±¼äÊý×éÐ´ÈëÊ±¼ä½á¹¹ÖÐ
+//å°†è¯»å‡ºçš„æ—¶é—´æ•°ç»„å†™å…¥æ—¶é—´ç»“æž„ä¸­
 void date_to_time(uchar date[],Time t)
 {
   t.second=date[0];
@@ -330,8 +330,8 @@ void date_to_time(uchar date[],Time t)
   t.month=date[5];
   t.year=date[6];
 }
-/*
-//test
+
+/*//test
 void w_and_r()
 {
   WriteTimeOn();
@@ -339,7 +339,7 @@ void w_and_r()
 	I2CStart();
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
-    	I2CSendByte(0x03);		//ÉèÖÃÐ´ÆðÊ¼µØÖ·      
+    	I2CSendByte(0x03);		//è®¾ç½®å†™èµ·å§‹åœ°å€      
 	I2CWaitAck();	
         //I2CSendByte(0x30);      
 	//I2CWaitAck();
@@ -357,19 +357,19 @@ void w_and_r()
         I2CNoAck();
 	delay_1us();
 	I2CStop();
-}
-*/
+}*/
+
 //========================================================================= 
 /*void main(void)
 {  
         uchar rdate[7];
-	uchar times[7]={0x00,0x30,0x95,0x02,0x15,0x04,0x14};         //Ð¡Ê±×¢Òâ£¬times[2]£»
-	I2CWriteDate(times); 		//Ð´ÊµÊ±Ê±ÖÓ
+	uchar times[7]={0x00,0x30,0x95,0x02,0x15,0x04,0x14};         //å°æ—¶æ³¨æ„ï¼Œtimes[2]ï¼›
+	I2CWriteDate(times); 		//å†™å®žæ—¶æ—¶é’Ÿ
  	while(1)
 	{
           //w_and_r();
- 		I2CReadDate(rdate); 		//¶ÁÊµÊ±Ê±ÖÓ	
-         	delay_ms(1000);		//ÑÓÊ±1S
+ 		I2CReadDate(rdate); 		//è¯»å®žæ—¶æ—¶é’Ÿ	
+         	delay_ms(1000);		//å»¶æ—¶1S
 
     }
 }*/
