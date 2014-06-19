@@ -153,7 +153,7 @@ void set_logic(void)
 	if (logic_sum >= MAX_LOGIC_SIZE)
 		return;
 	for (i = 0; i < logic_sum; i++)
-		if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F))
+		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1))
 			return;
 	memcpy(timestamp, rx_buf + 10, 2);
 	memcpy(logic_entry + logic_sum, rx_buf + 13, 32);
@@ -190,9 +190,9 @@ void set_logic_enable(void)
 	int i;
 	
 	for (i = 0; i < logic_sum; i++)
-		if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
+		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
 			memcpy(timestamp, rx_buf + 10, 2);
-			logic_entry[i].enable = rx_buf[13] >> 7;
+			logic_entry[i].enable = rx_buf[13] & 0x01;
 			break;
 		}
 
@@ -221,7 +221,7 @@ void del_logic(void)
 	int i, j;
 
 	for (i = 0; i < logic_sum; i++)
-		if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
+		if (logic_entry[i].logic_seq == (rx_buf[12] >> 1)) {
 			memcpy(timestamp, rx_buf + 10, 2);
 			memmove(logic_entry + i, logic_entry + i + 1,
 					(logic_sum - i - 1) * sizeof(Logic));
