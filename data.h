@@ -35,6 +35,7 @@ typedef struct {
 	unsigned char para2;			//参数2
 } Sensor_Condition;
 
+/* 4 byte */
 typedef struct
 {
 	unsigned char net_id;			//继电器子网ID

@@ -31,7 +31,7 @@ void main(void)
 
 		if (filled)
 			rx_handler();
-		
+		/*
 		I2CReadDate(now);
 		for (i = 0; i < time_sum; i++)
 			if (!time_cmp(&now, &(time_entry[i].time))) {
@@ -76,7 +76,7 @@ void main(void)
 				default:
 					break;
 			}
-		}
+		}*/
 
 
 
@@ -142,6 +142,10 @@ __interrupt void uart0_rx_isr(void)
 				break;
 			case 2:
 				rx_buf[rx_pos] = rx_now;	//目的设备ID
+				if (rx_now != dev_id) {
+					rx_rst();
+					break;
+				}
 				rx_step++;
 				rx_pos ++;
 				break;
@@ -304,6 +308,7 @@ __interrupt void uart0_tx_isr(void)
 		tx_num  = 0;
 		tx_pos  = 0;
 		RS485EN = 0;
+		memset(tx_buf, 0, MAX_TX_BUF_SIZE);
 		rx_rst();
 	}
 }

@@ -45,7 +45,7 @@ void set_tail(unsigned char len)
 
 void tx_status(void)
 {
-	set_header(0x0C, 0x00, 0x00, 0x00);
+	set_header(0x0A, 0x00, 0x00, 0x00);
 	memcpy(tx_buf + 12, mac, 8);
 	memcpy(tx_buf + 20, timestamp, 2);
 	set_tail(22);
