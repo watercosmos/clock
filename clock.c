@@ -338,7 +338,7 @@ void sys_init(void)
 
 	DDRE  = 0x64;
 	PORTE = 0x00;
-	DDRF  = 0x08;
+	DDRF  = 0x00;		//第四位置1导致时间无法读写
 	PORTF = 0x00;
 	DDRD  = 0x08;
 	PORTD = 0x00;

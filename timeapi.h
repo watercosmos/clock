@@ -217,7 +217,7 @@ uchar I2CReceiveByte(void) 		//数据从高位到低位//
 
 
 /******读SD2400实时数据寄存器******/
-void I2CReadDate(Time times)
+void I2CReadDate(Time *times)
 {
 	uchar n;
 	I2CStart();
@@ -232,7 +232,14 @@ void I2CReadDate(Time times)
                         
 		}
 	}
-	date_to_time(date,times);
+	//date_to_time(date,times);
+	times->second = date[0];
+	times->minute = date[1];
+	times->hour = date[2];
+	times->week = date[3];
+	times->day = date[4];
+	times->month = date[5];
+	times->year = date[6];
 	I2CNoAck();
 	delay_1us();
 	I2CStop();
@@ -240,7 +247,7 @@ void I2CReadDate(Time times)
 
 
 /******写SD2400实时数据寄存器******/
-void I2CWriteDate(Time times)
+void I2CWriteDate(Time *times)
 {		
 
         WriteTimeOn();
@@ -250,19 +257,19 @@ void I2CWriteDate(Time times)
 	I2CWaitAck();   
     	I2CSendByte(0x00);		//设置写起始地址      
 	I2CWaitAck();	
-	I2CSendByte(times.second);		// second     
+	I2CSendByte(times->second);		// second     
 	I2CWaitAck();	
-	I2CSendByte(times.minute);		//minute      
+	I2CSendByte(times->minute);		//minute      
 	I2CWaitAck();	
-	I2CSendByte(times.hour);		//hour ,二十四小时制     
+	I2CSendByte(times->hour);		//hour ,二十四小时制     
 	I2CWaitAck();	
-	I2CSendByte(times.week);		//week      
+	I2CSendByte(times->week);		//week      
 	I2CWaitAck();	
-	I2CSendByte(times.day);		//day      
+	I2CSendByte(times->day);		//day      
 	I2CWaitAck();	
-	I2CSendByte(times.month);		//month      
+	I2CSendByte(times->month);		//month      
 	I2CWaitAck();	
-	I2CSendByte(times.year);		//year      
+	I2CSendByte(times->year);		//year      
 	I2CWaitAck();	
 	I2CStop();
 
