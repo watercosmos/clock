@@ -62,3 +62,5 @@ Logic logic_entry[MAX_LOGIC_SIZE];
 Time_Entry time_entry[MAX_TIME_SIZE];
 unsigned char logic_sum;
 unsigned char time_sum;
+
+int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};

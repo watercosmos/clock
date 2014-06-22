@@ -31,7 +31,7 @@ void calc_time(const Time_Condition * tc, unsigned char ls)
 	Time t; 
 	memcpy(&t, &(tc->start_time), sizeof(Time));
 
-	I2CReadDate(now);
+	I2CReadDate(&now);
 	if (time_cmp(&now, &t) <= 0) {
 		memcpy(time_entry + time_sum, &t, sizeof(Time));
 		time_entry[time_sum].logic_seq = ls;
@@ -42,7 +42,7 @@ void calc_time(const Time_Condition * tc, unsigned char ls)
 			return;
 	else {
 		int i, x;
-		int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+		//int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 		switch (tc->loop_unit) {
 			case 0:			//按天循环	

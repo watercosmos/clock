@@ -117,7 +117,7 @@ void set_time(void)
 {
 	memcpy(timestamp, rx_buf + 10, 2);
 	memcpy(&now, rx_buf + 12, 7);
-	I2CWriteDate(now);
+	I2CWriteDate(&now);
 	set_header(0x00, 0x05, 0x00, 0x00);
 	set_tail(12);
 
@@ -127,7 +127,7 @@ void set_time(void)
 
 void tx_time(void)
 {
-	I2CReadDate(now);
+	I2CReadDate(&now);
 	set_header(0x07, 0x05, 0x01, 0x00);
 	memcpy(tx_buf + 12, &now, 7);
 	set_tail(19);
@@ -166,6 +166,9 @@ void set_logic(void)
 
 	tx_num = 14;
 	TOTX   = 1;
+
+	calc_time(&(logic_entry[logic_sum - 1].cond1),
+				logic_entry[logic_sum - 1].logic_seq);
 }
 
 void tx_logic_entry(void)
@@ -240,12 +243,12 @@ void del_logic(void)
 	TOTX   = 1;
 }
 
-void tx_to_switch(unsigned char net_id, unsigned char dev_id,
+void tx_to_switch(unsigned char dev_id, unsigned char net_id,
 					unsigned char type, unsigned char id, unsigned char area_id)
 {
 	set_header(0x03, 0x03, 0x84, 0x00);
-	tx_buf[2]  = net_id;
-	tx_buf[3]  = dev_id;
+	tx_buf[2]  = dev_id;
+	tx_buf[3]  = net_id;
 	tx_buf[12] = type;
 	tx_buf[13] = id;
 	tx_buf[14] = area_id;

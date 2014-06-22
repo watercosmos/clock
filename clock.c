@@ -1,8 +1,8 @@
 ﻿/* clock.c */
 #include "clock.h"
 #include "timeapi.h"
-#include "assemble.h"
 #include "time.h"
+#include "assemble.h"
 
 volatile unsigned char filled;
 volatile unsigned int  length;
@@ -31,44 +31,59 @@ void main(void)
 
 		if (filled)
 			rx_handler();
-		/*
-		I2CReadDate(now);
+		
+		I2CReadDate(&now);
 		for (i = 0; i < time_sum; i++)
 			if (!time_cmp(&now, &(time_entry[i].time))) {
 				for (j = 0; j < logic_sum; j++)
 					if (time_entry[i].logic_seq == logic_entry[j].logic_seq)
-						logic_entry[j].cond2_enable = 1;
+						logic_entry[j].cond1_enable = 1;
 				del_time(i);
 				break;
 			}
 
 		for (i = 0; i < logic_sum; i++) {
-			Logic l = logic_entry[i];
-			if (l.enable == 0)
+			if (logic_entry[i].enable == 0)
 				continue;
-			switch(l.logic_operator) {
+			switch(logic_entry[i].logic_operator) {
 				case 0:			//逻辑与	
-					if (l.cond1_enable && l.cond1_enable &&
-						l.cond3_enable && l.cond4_enable) {
-						if (l.func_type == 0)
-							tx_to_switch(l.func_para.net_id, l.func_para.dev_id,
-									0x21, l.func_para.id, l.func_para.area_id);
-						else if (l.func_type == 1)
-							tx_to_switch(l.func_para.net_id, l.func_para.dev_id,
-									0x41, l.func_para.id, l.func_para.area_id);
-						l.cond2_enable = 0;
+					if (logic_entry[i].cond1_enable &&
+						logic_entry[i].cond2_enable &&
+						logic_entry[i].cond3_enable &&
+						logic_entry[i].cond4_enable) {
+						if (logic_entry[i].func_type == 0)
+							tx_to_switch(logic_entry[i].func_para.dev_id,
+											logic_entry[i].func_para.net_id,
+											0x21,
+											logic_entry[i].func_para.id,
+											logic_entry[i].func_para.area_id);
+						else if (logic_entry[i].func_type == 1)
+							tx_to_switch(logic_entry[i].func_para.dev_id,
+											logic_entry[i].func_para.net_id,
+											0x41,
+											logic_entry[i].func_para.id,
+											logic_entry[i].func_para.area_id);
+						logic_entry[i].cond1_enable = 0;
 					}
 					break;
-				case 1:
-					if (l.cond1_enable || l.cond2_enable ||
-						l.cond3_enable || l.cond4_enable) {
-						if (l.func_type == 0)
-							tx_to_switch(l.func_para.net_id, l.func_para.dev_id,
-									0x21, l.func_para.id, l.func_para.area_id);
-						else if (l.func_type == 1)
-							tx_to_switch(l.func_para.net_id, l.func_para.dev_id,
-									0x41, l.func_para.id, l.func_para.area_id);
-						l.cond2_enable = 0;
+				case 1:			//逻辑或
+					if (logic_entry[i].cond1_enable ||
+						logic_entry[i].cond2_enable ||
+						logic_entry[i].cond3_enable ||
+						logic_entry[i].cond4_enable) {
+						if (logic_entry[i].func_type == 0)
+							tx_to_switch(logic_entry[i].func_para.dev_id,
+											logic_entry[i].func_para.net_id,
+											0x21,
+											logic_entry[i].func_para.id,
+											logic_entry[i].func_para.area_id);
+						else if (logic_entry[i].func_type == 1)
+							tx_to_switch(logic_entry[i].func_para.dev_id,
+											logic_entry[i].func_para.net_id,
+											0x41,
+											logic_entry[i].func_para.id,
+											logic_entry[i].func_para.area_id);
+						logic_entry[i].cond1_enable = 0;
 					}
 					break;
 				case 2:			//逻辑非
@@ -76,7 +91,7 @@ void main(void)
 				default:
 					break;
 			}
-		}*/
+		}
 
 
 
