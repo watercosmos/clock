@@ -23,9 +23,8 @@ int main(void)
 {
 	char *s;
 	unsigned char d[60];
-	unsigned char b, c;
 	int i;
-	int choose;
+	char more;
 
 	s = (char *)malloc(120);
 	memset(s, 0, 120);
@@ -82,8 +81,14 @@ int main(void)
 		calc_crc(d[i]);
 	printf("\nCRC: %02X %02X\n",
 		(unsigned char)crc, (unsigned char)(crc / 256));
-
+/*
 	puts("\nWould you like to continue? (y/n)\n");
+	getchar();
+	scanf("%c", &more);
+	if (more == 'y' || more == 'Y') {
+		puts("\n");
+		main();
+	}*/
 
 	return 0;
 }

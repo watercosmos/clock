@@ -32,7 +32,7 @@ void calc_time(const Time_Condition * tc, unsigned char ls)
 	memcpy(&t, &(tc->start_time), sizeof(Time));
 
 	I2CReadDate(&now);
-	if (time_cmp(&now, &t) <= 0) {
+	if (time_cmp(&now, &t) < 0) {
 		memcpy(time_entry + time_sum, &t, sizeof(Time));
 		time_entry[time_sum].logic_seq = ls;
 		time_sum++;
@@ -46,7 +46,7 @@ void calc_time(const Time_Condition * tc, unsigned char ls)
 
 		switch (tc->loop_unit) {
 			case 0:			//按天循环	
-				while (time_cmp(&now, &t) > 0) {
+				while (time_cmp(&now, &t) >= 0) {
 					t.day += tc->interval;
 					while (t.day > days[t.month - 1]) {
 						x = (t.month == 2 && (t.year % 400 == 0 ||

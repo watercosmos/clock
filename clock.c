@@ -36,15 +36,20 @@ void main(void)
 		for (i = 0; i < time_sum; i++)
 			if (!time_cmp(&now, &(time_entry[i].time))) {
 				for (j = 0; j < logic_sum; j++)
-					if (time_entry[i].logic_seq == logic_entry[j].logic_seq)
+					if (time_entry[i].logic_seq == logic_entry[j].logic_seq) {
 						logic_entry[j].cond1_enable = 1;
+						calc_time(&(logic_entry[j].cond1),
+									logic_entry[j].logic_seq);
+					}
 				del_time(i);
 				break;
 			}
 
 		for (i = 0; i < logic_sum; i++) {
-			if (logic_entry[i].enable == 0)
+			if (logic_entry[i].enable == 0) {
+				logic_entry[i].cond1_enable = 0;
 				continue;
+			}
 			switch(logic_entry[i].logic_operator) {
 				case 0:			//逻辑与	
 					if (logic_entry[i].cond1_enable &&

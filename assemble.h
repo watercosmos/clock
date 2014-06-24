@@ -159,8 +159,6 @@ void set_logic(void)
 	memcpy(logic_entry + logic_sum, rx_buf + 13, 32);
 	logic_sum++;
 
-	if (logic_entry[logic_sum - 1].enable == 1) {
-	}
 	set_header(0x00, 0x05, 0x03, 0x00);
 	set_tail(12);
 
@@ -168,7 +166,7 @@ void set_logic(void)
 	TOTX   = 1;
 
 	calc_time(&(logic_entry[logic_sum - 1].cond1),
-				logic_entry[logic_sum - 1].logic_seq);
+			logic_entry[logic_sum - 1].logic_seq);
 }
 
 void tx_logic_entry(void)
