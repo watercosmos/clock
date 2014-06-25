@@ -17,6 +17,28 @@ int time_cmp(const Time * t1, const Time * t2)
 		return 0;
 }
 
+void hex_to_dec(const Time *t, Time *ret)
+{
+	ret->year   = (t->year   >> 4) * 10 + (t->year   & 0x0F);
+	ret->month  = (t->month  >> 4) * 10 + (t->month  & 0x0F);
+	ret->day    = (t->day    >> 4) * 10 + (t->day    & 0x0F);
+	ret->week   = (t->week   >> 4) * 10 + (t->week   & 0x0F);
+	ret->hour   = (t->hour   >> 4) * 10 + (t->hour   & 0x0F);
+	ret->minute = (t->minute >> 4) * 10 + (t->minute & 0x0F);
+	ret->second = (t->second >> 4) * 10 + (t->second & 0x0F);
+}
+
+void dec_to_hex(const Time *t, Time *ret)
+{
+	ret->year   = (t->year   / 10 << 4) | (t->year   % 10);
+	ret->month  = (t->month  / 10 << 4) | (t->month  % 10);
+	ret->day    = (t->day    / 10 << 4) | (t->day    % 10);
+	ret->week   = (t->week   / 10 << 4) | (t->week   % 10);
+	ret->hour   = (t->hour   / 10 << 4) | (t->hour   % 10);
+	ret->minute = (t->minute / 10 << 4) | (t->minute % 10);
+	ret->second = (t->second / 10 << 4) | (t->second % 10);
+}
+
 void del_time(int i)
 {
 	memmove(time_entry + i, time_entry + i + 1,
@@ -47,21 +69,24 @@ void calc_time(const Time_Condition * tc, unsigned char ls)
 		switch (tc->loop_unit) {
 			case 0:			//按天循环	
 				while (time_cmp(&now, &t) >= 0) {
-					t.day += tc->interval;
-					while (t.day > days[t.month - 1]) {
-						x = (t.month == 2 && (t.year % 400 == 0 ||
-							 (t.year % 4 ==0 && t.year % 100 != 0)))?1:0;
-						t.day = t.day - days[t.month - 1] - x;
-						if (t.day == 0) {
-							t.day = 29;
+					hex_to_dec(&t, &t_dec);
+					t_dec.day += tc->interval;
+					while (t_dec.day > days[t.month - 1]) {
+						x = (t_dec.month == 2 && (t_dec.year % 400 == 0 ||
+							 (t_dec.year % 4 == 0 && t_dec.year % 100 != 0)))
+							? 1 : 0;
+						t_dec.day = t_dec.day - days[t.month - 1] - x;
+						if (t_dec.day == 0) {
+							t_dec.day = 29;
 							break;
 						}
-						t.month++;
-						if (t.month > 12) {
-							t.month = 1;
-							t.year++;
+						t_dec.month++;
+						if (t_dec.month > 12) {
+							t_dec.month = 1;
+							t_dec.year++;
 						}
 					}
+					dec_to_hex(&t_dec, &t);
 				}
 				memcpy(time_entry + time_sum, &t, sizeof(Time));
 				time_entry[time_sum].logic_seq = ls;
