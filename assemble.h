@@ -60,7 +60,7 @@ void set_abstract(void)
 	memcpy(dev_models, rx_buf + 12, 12);
 	enable = rx_buf[24];
 
-	set_header(0x00, 0x00, 0x01, 0x00);
+	set_header(0x00, 0x00, 0x04, 0x00);
 	set_tail(12);
 
 	tx_num = 14;
@@ -69,7 +69,7 @@ void set_abstract(void)
 
 void tx_abstract(void)
 {
-	set_header(0x1F, 0x00, 0x02, 0x00);
+	set_header(0x1F, 0x00, 0x09, 0x00);
 	memcpy(tx_buf + 12, dev_models, 12);
 	tx_buf[24] = enable;
 	memcpy(tx_buf + 25, mac, 8);
@@ -82,7 +82,7 @@ void tx_abstract(void)
 
 void tx_mac(void)
 {
-	set_header(0x08, 0x00, 0x03, 0x00);
+	set_header(0x08, 0x00, 0x0B, 0x00);
 	memcpy(tx_buf + 12, mac, 8);
 	set_tail(20);
 
@@ -96,7 +96,7 @@ void set_id(void)
 	dev_id = rx_buf[20];
 	net_id = rx_buf[21];
 
-	set_header(0x00, 0x00, 0x04, 0x00);
+	set_header(0x00, 0x00, 0x0C, 0x00);
 	set_tail(12);
 
 	tx_num = 14;
@@ -106,7 +106,7 @@ void set_id(void)
 void set_enable(void)
 {
 	enable = rx_buf[10];
-	set_header(0x00, 0x00, 0x05, 0x00);
+	set_header(0x00, 0x00, 0x0D, 0x00);
 	set_tail(12);
 
 	tx_num = 14;

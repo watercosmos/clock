@@ -255,7 +255,7 @@ void crc_check(void)
 void rx_handler(void)
 {
 	filled = 0;
-	if (enable != 1 && (rx_buf[8] & 0xBF) != 0x85) {
+	if (enable != 1 && (rx_buf[8] & 0xBF) != 0x8D) {
 		rx_rst();
 		return;
 	}
@@ -264,19 +264,19 @@ void rx_handler(void)
 			case 0x80:
 				tx_status();
 				break;
-			case 0x81:
+			case 0x84:
 				set_abstract();
 				break;
-			case 0x82:
+			case 0x89:
 				tx_abstract();
 				break;
-			case 0x83:
+			case 0x8B:
 				tx_mac();
 				break;
-			case 0x84:
+			case 0x8C:
 				set_id();
 				break;
-			case 0x85:
+			case 0x8D:
 				set_enable();
 				break;
 			default:
