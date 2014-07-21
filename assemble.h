@@ -244,14 +244,20 @@ void del_logic(void)
 void tx_to_switch(unsigned char dev_id, unsigned char net_id,
 					unsigned char type, unsigned char id, unsigned char area_id)
 {
-	set_header(0x03, 0x03, 0x84, 0x00);
+	set_header(0x02, 0x03, 0xBE, 0x00);
 	tx_buf[2]  = dev_id;
 	tx_buf[3]  = net_id;
 	tx_buf[12] = type;
-	tx_buf[13] = id;
-	tx_buf[14] = area_id;
-	set_tail(15);
+	tx_buf[13] = area_id;
+	tx_buf[13] <<= 5;
+	tx_buf[13] = tx_buf[13] | id;
+	set_tail(14);
 
-	tx_num = 17;
+	tx_num = 16;
 	TOTX   = 1;
+}
+
+void response_to_switch(void)
+{
+	//保存继电器发来的信息，添加时间表
 }

@@ -41,6 +41,7 @@ void main(void)
 						calc_time(&(logic_entry[j].cond1),
 									logic_entry[j].logic_seq);
 					}
+				//这里遍历继电器逻辑表
 				del_time(i);
 				break;
 			}
@@ -179,7 +180,7 @@ __interrupt void uart0_rx_isr(void)
 				rx_step++;
 				rx_pos ++;
 				break;
-			case 5:				//这里该加地址校验
+			case 5:
 				rx_buf[rx_pos] = rx_now;	//源子网ID
 				rx_step++;
 				rx_pos ++;
@@ -200,7 +201,7 @@ __interrupt void uart0_rx_isr(void)
 				rx_step++;
 				rx_pos ++;
 				break;
-			case 9:				//这里应该做命令类型校验（似乎和地址校验功能冲突）
+			case 9:
 				rx_buf[rx_pos] = rx_now;	//命令大类
 				rx_step++;
 				rx_pos ++;
@@ -217,7 +218,7 @@ __interrupt void uart0_rx_isr(void)
 				break;
 			case 12:
 				if (length == 0) {			//payload
-					rx_buf[rx_pos] = rx_now;//存crc的第一字节
+					rx_buf[rx_pos] = rx_now;
 					rx_pos ++;
 					rx_step++;
 				} else {
@@ -311,6 +312,8 @@ void rx_handler(void)
 			default:
 				break;
 		}
+	} else if ((rx_buf[7] & 0x3F) == 0x05 && (rx_buf[8] & 0xBF) == 0xBF) {
+		response_to_switch();
 	}
 	rx_rst();
 }

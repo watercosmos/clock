@@ -51,7 +51,29 @@ void dec_to_hex(const Time *t, Time *ret)
 	ret->second = (t->second / 10 << 4) | (t->second % 10);
 }
 
-/* 返回值0-6代表周一到周日 */
+/* 修正日期，当日期增加天数超过该月天数时 */
+void fix_date(Time *t)
+{
+	int x;
+
+	while (t->day > days[t->month - 1]) {
+		x = (t->month == 2 && (t->year % 400 == 0 ||
+			(t->year % 4 == 0 && t->year % 100 != 0))) ? 1 : 0;
+		t->day = t->day - days[t->month - 1] - x;
+		if (t->day == 0) {
+			t->day = 29;
+			break;
+		}
+		t->month++;
+		if (t->month > 12) {
+			t->month = 1;
+			t->year;
+		}
+	}
+}
+
+/* 由年月日计算星期几
+   返回值0-6代表周一到周日 */
 int calc_weekday(int y, int m, int d)
 {
 	int w;
@@ -66,9 +88,27 @@ int calc_weekday(int y, int m, int d)
 	return w;
 }
 
-int calc_firstday(int y, int m)
+/* 由年月日计算属于月中第几周 */
+int which_week(int y, int m, int d)
 {
-	//计算每个月的第一天是周几
+	int firstday = calc_weekday(y, m, 1);
+
+	return (d + firstday - 1) / 7 + 1;
+}
+
+/* 由年、月、周数、周中哪天计算实际日期，返回日期 */
+int calc_date(int y, int m, int w, unsigned char day_in_week)
+{
+	int num = 0;
+	int firstday_in_month = calc_weekday(y, m, 1);
+	int firstday_in_week = 7 * w - firstday_in_month - 6;
+
+	while (!(day_in_week & 0x01)) {
+		day_in_week = day_in_week >> 1;
+		num++;
+	}
+
+	return firstday_in_week + num;
 }
 
 void del_time(int i)
@@ -82,7 +122,7 @@ void del_time(int i)
 
 void calc_time(Time_Condition * tc, unsigned char ls)
 {
-	int i, x;
+	int i, x, num = 0;
 	Time t;
 
 	memcpy(&t, &(tc->start_time), sizeof(Time));
@@ -116,21 +156,7 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 			while (time_cmp(&now, &t) >= 0) {
 				hex_to_dec(&t, &t_dec);
 				t_dec.day += tc->interval;
-				while (t_dec.day > days[t.month - 1]) {
-					x = (t_dec.month == 2 && (t_dec.year % 400 == 0 ||
-						 (t_dec.year % 4 == 0 && t_dec.year % 100 != 0)))
-						? 1 : 0;
-					t_dec.day = t_dec.day - days[t.month - 1] - x;
-					if (t_dec.day == 0) {
-						t_dec.day = 29;
-						break;
-					}
-					t_dec.month++;
-					if (t_dec.month > 12) {
-						t_dec.month = 1;
-						t_dec.year++;
-					}
-				}
+				fix_date(&t_dec);
 				dec_to_hex(&t_dec, &t);
 			}
 			memcpy(time_entry + time_sum, &t, sizeof(Time));
@@ -138,11 +164,23 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 			time_sum++;
 			break;
 		case 1:			//按周循环
-			/*while (time_cmp(&now, &t) >= 0) {
+			while (time_cmp(&now, &t) >= 0) {
 				hex_to_dec(&t, &t_dec);
-				//
+				t_dec.day += 7 * tc->interval;
+				fix_date(&t_dec);
+				t_dec.day -= calc_weekday(t_dec.year, t_dec.month, t_dec.day);
+				while (!(tc->day_in_week & 0x01)) {
+					tc->day_in_week >>= 1;
+					num++;
+				}
+				t_dec.day += num;
+				fix_date(&t_dec);
 				dec_to_hex(&t_dec, &t);
-			}*/
+			}
+			memcpy(time_entry + time_sum, &t, sizeof(Time));
+			time_entry[time_sum].logic_seq = ls;
+			time_sum++;
+			break;
 		case 2:			//按月循环
 			break;
 	}
