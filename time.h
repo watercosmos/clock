@@ -123,6 +123,7 @@ void del_time(int i)
 void calc_time(Time_Condition * tc, unsigned char ls)
 {
 	int i, x, num = 0;
+	unsigned char diw = tc->day_in_week;
 	Time t;
 
 	memcpy(&t, &(tc->start_time), sizeof(Time));
@@ -169,8 +170,8 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 				t_dec.day += 7 * tc->interval;
 				fix_date(&t_dec);
 				t_dec.day -= calc_weekday(t_dec.year, t_dec.month, t_dec.day);
-				while (!(tc->day_in_week & 0x01)) {
-					tc->day_in_week >>= 1;
+				while (!(diw & 0x01)) {
+					diw >>= 1;
 					num++;
 				}
 				t_dec.day += num;
