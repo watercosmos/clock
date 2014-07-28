@@ -56,6 +56,11 @@ void fix_date(Time *t)
 {
 	int x;
 
+	while (t->month > 12) {
+		t->month -= 12;
+		t->year++;
+	}
+
 	while (t->day > days[t->month - 1]) {
 		x = (t->month == 2 && (t->year % 400 == 0 ||
 			(t->year % 4 == 0 && t->year % 100 != 0))) ? 1 : 0;
@@ -67,7 +72,7 @@ void fix_date(Time *t)
 		t->month++;
 		if (t->month > 12) {
 			t->month = 1;
-			t->year;
+			t->year++;
 		}
 	}
 }
@@ -160,9 +165,6 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 				fix_date(&t_dec);
 				dec_to_hex(&t_dec, &t);
 			}
-			memcpy(time_entry + time_sum, &t, sizeof(Time));
-			time_entry[time_sum].logic_seq = ls;
-			time_sum++;
 			break;
 		case 1:			//按周循环
 			while (time_cmp(&now, &t) >= 0) {
@@ -178,13 +180,20 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 				fix_date(&t_dec);
 				dec_to_hex(&t_dec, &t);
 			}
-			memcpy(time_entry + time_sum, &t, sizeof(Time));
-			time_entry[time_sum].logic_seq = ls;
-			time_sum++;
 			break;
 		case 2:			//按月循环
+			while (time_cmp(&now, &t) >= 0) {
+				hex_to_dec(&t, &t_dec);
+				t_dec.month += tc->interval;
+				fix_date(&t_dec);
+				t_dec.day = tc->day_in_month;
+				dec_to_hex(&t_dec, &t);
+			}
 			break;
 	}
+	memcpy(time_entry + time_sum, &t, sizeof(Time));
+	time_entry[time_sum].logic_seq = ls;
+	time_sum++;
 }
 
 /* 日期比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
