@@ -241,16 +241,22 @@ void del_logic(void)
 	TOTX   = 1;
 }
 
-void tx_to_switch(unsigned char dev_id, unsigned char net_id,
-					unsigned char type, unsigned char id, unsigned char area_id)
+void tx_to_switch(Func_Para fp, unsigned char ft)
 {
+	unsigned char type;
+	
+	if (ft == 0)
+		type = 0x21;
+	else if (ft == 1)
+		type = 0x41;
+
 	set_header(0x02, 0x03, 0xBE, 0x00);
-	tx_buf[2]  = dev_id;
-	tx_buf[3]  = net_id;
+	tx_buf[2]  = fp.dev_id;
+	tx_buf[3]  = fp.net_id;
 	tx_buf[12] = type;
-	tx_buf[13] = area_id;
+	tx_buf[13] = fp.area_id;
 	tx_buf[13] <<= 5;
-	tx_buf[13] = tx_buf[13] | id;
+	tx_buf[13] = tx_buf[13] | fp.id;
 	set_tail(14);
 
 	tx_num = 16;

@@ -13,11 +13,11 @@ void delay_10ms(void);
 void rx_rst(void);
 void crc_check(void);
 void rx_handler(void);
+void list_for_time_entry(void);
+void list_for_logic_entry(void);
 
 void main(void)
 {
-	int i, j;
-
 	sys_init();
 	_SEI();
 
@@ -31,81 +31,9 @@ void main(void)
 
 		if (filled)
 			rx_handler();
-		
-		I2CReadDate(&now);
-		for (i = 0; i < time_sum; i++)
-			if (!time_cmp(&now, &(time_entry[i].time))) {
-				for (j = 0; j < logic_sum; j++)
-					if (time_entry[i].logic_seq == logic_entry[j].logic_seq) {
-						logic_entry[j].cond1_enable = 1;
-						calc_time(&(logic_entry[j].cond1),
-									logic_entry[j].logic_seq);
-					}
-				//这里遍历继电器逻辑表
-				del_time(i);
-				break;
-			}
 
-		for (i = 0; i < logic_sum; i++) {
-			if (logic_entry[i].enable == 0) {
-				logic_entry[i].cond1_enable = 0;
-				continue;
-			}
-			switch(logic_entry[i].logic_operator) {
-				case 0:			//逻辑与	
-					if (logic_entry[i].cond1_enable &&
-						logic_entry[i].cond2_enable &&
-						logic_entry[i].cond3_enable &&
-						logic_entry[i].cond4_enable) {
-						if (logic_entry[i].func_type == 0)
-							tx_to_switch(logic_entry[i].func_para.dev_id,
-											logic_entry[i].func_para.net_id,
-											0x21,
-											logic_entry[i].func_para.id,
-											logic_entry[i].func_para.area_id);
-						else if (logic_entry[i].func_type == 1)
-							tx_to_switch(logic_entry[i].func_para.dev_id,
-											logic_entry[i].func_para.net_id,
-											0x41,
-											logic_entry[i].func_para.id,
-											logic_entry[i].func_para.area_id);
-						logic_entry[i].cond1_enable = 0;
-					}
-					break;
-				case 1:			//逻辑或
-					if (logic_entry[i].cond1_enable ||
-						logic_entry[i].cond2_enable ||
-						logic_entry[i].cond3_enable ||
-						logic_entry[i].cond4_enable) {
-						if (logic_entry[i].func_type == 0)
-							tx_to_switch(logic_entry[i].func_para.dev_id,
-											logic_entry[i].func_para.net_id,
-											0x21,
-											logic_entry[i].func_para.id,
-											logic_entry[i].func_para.area_id);
-						else if (logic_entry[i].func_type == 1)
-							tx_to_switch(logic_entry[i].func_para.dev_id,
-											logic_entry[i].func_para.net_id,
-											0x41,
-											logic_entry[i].func_para.id,
-											logic_entry[i].func_para.area_id);
-						logic_entry[i].cond1_enable = 0;
-					}
-					break;
-				case 2:			//逻辑非
-				case 3:			//逻辑异或
-				default:
-					break;
-			}
-		}
-
-
-
-		/*for (i = 0; i < logic_num; i++) {
-			if (logic_entry[i].trigger == 1) {
-				//组帧发往继电器
-			}
-		}*/
+		list_for_time_entry();
+		list_for_logic_entry();
 
 		WDI = 0;
 		delay_10ms();
@@ -150,15 +78,10 @@ __interrupt void uart0_rx_isr(void)
 		rx_now = UDR0;
 		switch (rx_step) {
 			case 0:
-				if (rx_now == 0xAA) {
-					rx_step++;
-				} else
-					rx_rst();
-				break;
 			case 1:
-				if (rx_now == 0xAA) {
+				if (rx_now == 0xAA)
 					rx_step++;
-				} else
+				else
 					rx_rst();
 				break;
 			case 2:
@@ -170,62 +93,31 @@ __interrupt void uart0_rx_isr(void)
 				rx_step++;
 				rx_pos ++;
 				break;
-			case 3:
-				rx_buf[rx_pos] = rx_now;	//目的子网ID
+			case 3:			//目的子网ID
+			case 4:			//源设备ID
+			case 5:			//源子网ID
+			case 7:			//转发网关子网ID
+			case 8:			//分组序号
+			case 9:			//命令大类
+			case 10:		//命令小类
+			case 11:		//命令结果
+				rx_buf[rx_pos] = rx_now;
 				rx_step++;
 				rx_pos ++;
 				break;
-			case 4:
-				rx_buf[rx_pos] = rx_now;	//源设备ID
-				rx_step++;
-				rx_pos ++;
-				break;
-			case 5:
-				rx_buf[rx_pos] = rx_now;	//源子网ID
-				rx_step++;
-				rx_pos ++;
-				break;
-			case 6:
-				rx_buf[rx_pos] = rx_now;	//分组长度
+			case 6:			//分组长度
+				rx_buf[rx_pos] = rx_now;
 				length = rx_now;
 				rx_step++;
 				rx_pos ++;
 				break;
-			case 7:
-				rx_buf[rx_pos] = rx_now;	//转发网关子网ID
-				rx_step++;
+			case 12:		//payload
+				rx_buf[rx_pos] = rx_now;
 				rx_pos ++;
-				break;
-			case 8:
-				rx_buf[rx_pos] = rx_now;	//分组序号
-				rx_step++;
-				rx_pos ++;
-				break;
-			case 9:
-				rx_buf[rx_pos] = rx_now;	//命令大类
-				rx_step++;
-				rx_pos ++;
-				break;
-			case 10:
-				rx_buf[rx_pos] = rx_now;	//命令小类
-				rx_step++;
-				rx_pos ++;
-				break;
-			case 11:
-				rx_buf[rx_pos] = rx_now;	//命令结果
-				rx_step++;
-				rx_pos ++;
-				break;
-			case 12:
-				if (length == 0) {			//payload
-					rx_buf[rx_pos] = rx_now;
-					rx_pos ++;
+				if (length == 0)
 					rx_step++;
-				} else {
+				else
 					length--;
-					rx_buf[rx_pos] = rx_now;
-					rx_pos ++;
-				}
 				break;
 			case 13:
 				rx_buf[rx_pos] = rx_now;	//crc
@@ -409,4 +301,75 @@ void rx_rst(void)
 {
 	rx_step = 0;
 	rx_pos  = 0;
+}
+
+/**
+ * 遍历时间表
+ * 若时间匹配，则将对应逻辑的条件1置为真
+ * 并计算该逻辑的下一次触发时间，加入时间表
+ * 最后从时间表内删除当前时间表项
+ */
+void list_for_time_entry(void)
+{
+	int i, j;
+	unsigned char ls;
+
+	I2CReadDate(&now);
+	for (i = 0; i < time_sum; i++) {
+		if (time_cmp(&now, &(time_entry[i].time)))
+			continue;
+		ls = time_entry[i].logic_seq;
+
+		for (j = 0; j < logic_sum; j++)
+			if (logic_entry[j].logic_seq == ls) {
+				logic_entry[j].cond1_enable = 1;
+				calc_time(&(logic_entry[j].cond1),
+							logic_entry[j].logic_seq);
+			}
+		//这里遍历继电器逻辑表
+		del_time(i);
+		break;
+	}
+}
+
+/**
+ * 遍历逻辑表
+ * 若逻辑未开启，重置时间条件为0
+ * 若逻辑触发，发送指令给继电器，并将时间条件重置为0
+ */
+void list_for_logic_entry(void)
+{
+	int i, enable = 0;
+
+	for (i = 0; i < logic_sum; i++) {
+		if (logic_entry[i].enable == 0) {
+			logic_entry[i].cond1_enable = 0;
+			continue;
+		}
+
+		switch(logic_entry[i].logic_operator) {
+			case 0:			//逻辑与	
+				if (logic_entry[i].cond1_enable &&
+					logic_entry[i].cond2_enable &&
+					logic_entry[i].cond3_enable &&
+					logic_entry[i].cond4_enable)
+					enable = 1;
+				break;
+			case 1:			//逻辑或
+				if (logic_entry[i].cond1_enable ||
+					logic_entry[i].cond2_enable ||
+					logic_entry[i].cond3_enable ||
+					logic_entry[i].cond4_enable)
+					enable = 1;
+				break;
+			case 2:			//逻辑非
+			case 3:			//逻辑异或
+			default:
+				break;
+		}
+		if (enable) {
+			tx_to_switch(logic_entry[i].func_para, logic_entry[i].func_type);
+			logic_entry[i].cond1_enable = 0;
+		}
+	}
 }
