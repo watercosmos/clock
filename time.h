@@ -104,12 +104,13 @@ int which_week(int y, int m, int d)
 /* 由年、月、周数、周中哪天计算实际日期，返回日期 */
 int calc_date(int y, int m, int w, unsigned char day_in_week)
 {
+	unsigned char diw = day_in_week;
 	int num = 0;
 	int firstday_in_month = calc_weekday(y, m, 1);
 	int firstday_in_week = 7 * w - firstday_in_month - 6;
 
-	while (!(day_in_week & 0x01)) {
-		day_in_week = day_in_week >> 1;
+	while (!(diw & 0x01)) {
+		diw >>= 1;
 		num++;
 	}
 
@@ -144,18 +145,6 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 	}
 	if (tc->loop_flag == 0)
 			return;
-	switch (tc->loop_end_flag) {
-		case 0:			//无结束
-			break;
-		case 1:			//按重复次数
-			if (tc->loop_num == 0)
-				return;
-		case 2:			//按结束日期
-			if (date_cmp(&now, tc->end_date) == 0)
-				return;
-		default:
-			break;
-	}
 
 	switch (tc->loop_unit) {
 		case 0:			//按天循环	
@@ -182,15 +171,40 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 			}
 			break;
 		case 2:			//按月循环
-			while (time_cmp(&now, &t) >= 0) {
-				hex_to_dec(&t, &t_dec);
-				t_dec.month += tc->interval;
-				fix_date(&t_dec);
-				t_dec.day = tc->day_in_month;
-				dec_to_hex(&t_dec, &t);
-			}
+			//if (tc->loop_sec_unit == 0) {			//二层循环为天
+				while (time_cmp(&now, &t) >= 0) {
+					hex_to_dec(&t, &t_dec);
+					t_dec.month += tc->interval;
+					fix_date(&t_dec);
+					t_dec.day = tc->day_in_month;
+					dec_to_hex(&t_dec, &t);
+				}
+			/*} else if (tc->loop_sec_unit == 1) {	//二层循环为周
+				while (time_cmp(&now, &t) >= 0) {
+					hex_to_dec(&t, &t_dec);
+					t_dec.month += tc->interval;
+					fix_date(&t_dec);
+					t_dec.day = calc_date(t_dec.year,
+										  t_dec.month,
+										  tc->week_in_month,
+										  tc->day_in_week);
+					dec_to_hex(&t_dec, &t);
+				}
+			}*/
 			break;
 	}
+
+	switch (tc->loop_end_flag) {
+		case 0:			//无结束
+		case 1:			//按重复次数，未实现，不需要？
+			break;
+		case 2:			//按结束日期
+			if (date_cmp(&t, tc->end_date) >= 0)
+				return;		//是否应该删除逻辑了？
+		default:
+			break;
+	}
+
 	memcpy(time_entry + time_sum, &t, sizeof(Time));
 	time_entry[time_sum].logic_seq = ls;
 	time_sum++;
