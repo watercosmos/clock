@@ -128,7 +128,7 @@ void del_time(int i)
 
 void calc_time(Time_Condition * tc, unsigned char ls)
 {
-	int i, x, num = 0;
+	int num = 0;
 	unsigned char diw = tc->day_in_week;
 	Time t;
 

@@ -4,7 +4,7 @@
 #define  uint  unsigned int
 #define  ulong unsigned long
 
-void date_to_time(uchar date[],Time t);
+//void date_to_time(uchar date[],Time t);
 void WriteTimeOn(void);
 void WriteTimeOff(void);
 
@@ -327,7 +327,7 @@ void WriteTimeOff(void)
 }
 
 //将读出的时间数组写入时间结构中
-void date_to_time(uchar date[],Time t)
+/*void date_to_time(uchar date[],Time t)
 {
   t.second=date[0];
   t.minute=date[1];
@@ -336,7 +336,7 @@ void date_to_time(uchar date[],Time t)
   t.day=date[4];
   t.month=date[5];
   t.year=date[6];
-}
+}*/
 
 /*//test
 void w_and_r()
