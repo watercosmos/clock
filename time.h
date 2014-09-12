@@ -17,6 +17,7 @@ int time_cmp(const Time * t1, const Time * t2)
 		return 0;
 }
 
+/* 日期比较函数 */
 int date_cmp(const Time * t1, const unsigned char * t2)
 {
 	if (t1->year != *(t2 + 0))
@@ -29,6 +30,7 @@ int date_cmp(const Time * t1, const unsigned char * t2)
 		return 0;
 }
 
+/* 将十六进制时间按字面值转换为十进制 */
 void hex_to_dec(const Time *t, Time *ret)
 {
 	ret->year   = (t->year   >> 4) * 10 + (t->year   & 0x0F);
@@ -40,6 +42,7 @@ void hex_to_dec(const Time *t, Time *ret)
 	ret->second = (t->second >> 4) * 10 + (t->second & 0x0F);
 }
 
+/* 将十进制时间按字面转换为十六进制 */
 void dec_to_hex(const Time *t, Time *ret)
 {
 	ret->year   = (t->year   / 10 << 4) | (t->year   % 10);
@@ -51,7 +54,7 @@ void dec_to_hex(const Time *t, Time *ret)
 	ret->second = (t->second / 10 << 4) | (t->second % 10);
 }
 
-/* 修正日期，当日期增加天数超过该月天数时 */
+/* 修正日期，当日期、月份超出定值 */
 void fix_date(Time *t)
 {
 	int x;
@@ -62,9 +65,11 @@ void fix_date(Time *t)
 	}
 
 	while (t->day > days[t->month - 1]) {
+		//闰年2月时，x = 1，否则为0
 		x = (t->month == 2 && (t->year % 400 == 0 ||
 			(t->year % 4 == 0 && t->year % 100 != 0))) ? 1 : 0;
 		t->day = t->day - days[t->month - 1] - x;
+		//当前日期为闰年2月29日时
 		if (t->day == 0) {
 			t->day = 29;
 			break;
@@ -88,6 +93,7 @@ int calc_weekday(int y, int m, int d)
 		m += 12;
 		y--;
 	}
+	//Zeller’s Formula
 	w = (d + 2 * m + 3 * (m + 1) / 5 + y + y / 4 - y / 100 + y / 400) % 7;
 
 	return w;
@@ -117,6 +123,7 @@ int calc_date(int y, int m, int w, unsigned char day_in_week)
 	return firstday_in_week + num;
 }
 
+/* 删除单条时间表项 */
 void del_time(int i)
 {
 	memmove(time_entry + i, time_entry + i + 1,
@@ -126,23 +133,32 @@ void del_time(int i)
 			(MAX_TIME_SIZE - time_sum) * sizeof(Time_Entry));
 }
 
+/* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
 void calc_time(Time_Condition * tc, unsigned char ls)
 {
 	int num = 0;
-	unsigned char diw = tc->day_in_week;
+	unsigned char diw = tc->day_in_week;	//避免修改原值
 	Time t;
+
+	//时间表已满，舍弃
+	if (time_sum >= MAX_TIME_SIZE)
+		return;
 
 	memcpy(&t, &(tc->start_time), sizeof(Time));
 	I2CReadDate(&now);
 
+	//若当前时间早于开始时间，则将开始时间加入时间表
 	if (time_cmp(&now, &t) < 0) {
 		memcpy(time_entry + time_sum, &t, sizeof(Time));
 		time_entry[time_sum].logic_seq = ls;
 		time_sum++;
+		//循环次数减1
 		if (tc->loop_num != 0)
 			tc->loop_num--;
 		return;
 	}
+	
+	//单次逻辑直接返回
 	if (tc->loop_flag == 0)
 			return;
 

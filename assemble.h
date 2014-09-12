@@ -34,7 +34,7 @@ void set_header(unsigned char len,
 
 void set_tail(unsigned char len)
 {
-	int i;
+	unsigned char i;
 
 	crc = 0xFFFF;
 	for (i = 2; i < len; i++)
@@ -43,6 +43,7 @@ void set_tail(unsigned char len)
 	tx_buf[len + 1] = (unsigned char)(crc / 256);
 }
 
+/* 响应查询是否在线命令 */
 void tx_status(void)
 {
 	set_header(0x0A, 0x00, 0x00, 0x00);
@@ -54,6 +55,7 @@ void tx_status(void)
 	TOTX   = 1;
 }
 
+/* 设置摘要信息并响应 */
 void set_abstract(void)
 {
 	memcpy(timestamp, rx_buf + 10, 2);
@@ -67,6 +69,7 @@ void set_abstract(void)
 	TOTX   = 1;
 }
 
+/* 发送摘要信息 */
 void tx_abstract(void)
 {
 	set_header(0x1F, 0x00, 0x09, 0x00);
@@ -80,6 +83,7 @@ void tx_abstract(void)
 	TOTX   = 1;
 }
 
+/* 汇报MAC */
 void tx_mac(void)
 {
 	set_header(0x08, 0x00, 0x0B, 0x00);
@@ -90,6 +94,7 @@ void tx_mac(void)
 	TOTX   = 1;
 }
 
+/* 配置新的设备、子网ID并响应 */
 void set_id(void)
 {
 	memcpy(timestamp, rx_buf + 10, 2);
@@ -103,6 +108,7 @@ void set_id(void)
 	TOTX   = 1;
 }
 
+/* 启用/禁用模块 */
 void set_enable(void)
 {
 	enable = rx_buf[10];
@@ -113,6 +119,7 @@ void set_enable(void)
 	TOTX   = 1;
 }
 
+/* 校准时间 */
 void set_time(void)
 {
 	memcpy(timestamp, rx_buf + 10, 2);
@@ -125,6 +132,7 @@ void set_time(void)
 	TOTX   = 1;
 }
 
+/* 发送当前时间 */
 void tx_time(void)
 {
 	I2CReadDate(&now);
@@ -136,6 +144,7 @@ void tx_time(void)
 	TOTX   = 1;
 }
 
+/* 读取当前逻辑总数 */
 void tx_logic_sum(void)
 {
 	set_header(0x01, 0x05, 0x02, 0x00);
@@ -146,10 +155,12 @@ void tx_logic_sum(void)
 	TOTX   = 1;
 }
 
+/* 设置一条逻辑 */
 void set_logic(void)
 {
-	int i;
+	unsigned char i;
 
+	//排除逻辑表已满、逻辑号已存在的情况
 	if (logic_sum >= MAX_LOGIC_SIZE)
 		return;
 	for (i = 0; i < logic_sum; i++)
@@ -165,13 +176,15 @@ void set_logic(void)
 	tx_num = 14;
 	TOTX   = 1;
 
+	//一旦加入新逻辑，立即计算该逻辑下一次触发时间并加入时间表
 	calc_time(&(logic_entry[logic_sum - 1].cond1),
 			logic_entry[logic_sum - 1].logic_seq);
 }
 
+/* 发送一条逻辑 */
 void tx_logic_entry(void)
 {
-	int i;
+	unsigned char i;
 
 	for (i = 0; i < logic_sum; i++)
 		if (logic_entry[i].logic_seq == rx_buf[10]) {
@@ -186,9 +199,10 @@ void tx_logic_entry(void)
 		}
 }
 
+/* 启用/禁用单条逻辑 */
 void set_logic_enable(void)
 {
-	int i;
+	unsigned char i;
 	
 	for (i = 0; i < logic_sum; i++)
 		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
@@ -204,6 +218,7 @@ void set_logic_enable(void)
 	TOTX   = 1;
 }
 
+/* 清空所有逻辑 */
 void clear_logic(void)
 {
 	logic_sum = 0;
@@ -217,16 +232,19 @@ void clear_logic(void)
 	TOTX   = 1;
 }
 
+/* 删除单条逻辑 */
 void del_logic(void)
 {
-	int i, j;
+	unsigned char i, j;
 
 	for (i = 0; i < logic_sum; i++)
 		if (logic_entry[i].logic_seq == (rx_buf[12] >> 1)) {
 			memcpy(timestamp, rx_buf + 10, 2);
+			//将被删除逻辑后面的所有逻辑前移，
 			memmove(logic_entry + i, logic_entry + i + 1,
 					(logic_sum - i - 1) * sizeof(Logic));
 			logic_sum--;
+			//同时其后的所有逻辑号减1以使逻辑号连续
 			for (j = i; j < logic_sum; j++)
 				logic_entry[j].logic_seq--;
 			memset(logic_entry + logic_sum, 0,
@@ -241,6 +259,7 @@ void del_logic(void)
 	TOTX   = 1;
 }
 
+/* 继电器已有计时功能，这一段不需要了
 void tx_to_switch(Func_Para fp, unsigned char ft)
 {
 	unsigned char type;
@@ -266,4 +285,4 @@ void tx_to_switch(Func_Para fp, unsigned char ft)
 void response_to_switch(void)
 {
 	//保存继电器发来的信息，添加时间表
-}
+}*/

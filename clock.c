@@ -167,7 +167,8 @@ void rx_handler(void)
 				tx_mac();
 				break;
 			case 0x8C:
-				set_id();
+				if (!strncmp(mac, rx_buf + 12, 8))	//new, to be tested
+					set_id();
 				break;
 			case 0x8D:
 				set_enable();

@@ -1,4 +1,4 @@
-﻿/* 时间 7字节 */
+﻿/* 时间 7 byte */
 typedef struct
 {
 	unsigned char year;
@@ -47,27 +47,27 @@ typedef struct
 /* 32 byte */
 typedef struct
 {
-	unsigned char enable:1;
-	unsigned char logic_seq:7;
-	unsigned char reserve:2;
-	unsigned char logic_operator:2;
-	unsigned char cond4_enable:1;
+	unsigned char enable:1;				//逻辑使能
+	unsigned char logic_seq:7;			//逻辑号
+	unsigned char reserve:2;			//保留
+	unsigned char logic_operator:2;		//逻辑运算：0-3对应与或非异或
+	unsigned char cond4_enable:1;		//条件1-4启用/禁用
 	unsigned char cond3_enable:1;
 	unsigned char cond2_enable:1;
 	unsigned char cond1_enable:1;
-	unsigned char cond1_len;
-	Time_Condition cond1;
-	unsigned char cond2_len;
-	Sensor_Condition cond2;
-	unsigned char cond3_len;
+	unsigned char cond1_len;			//条件1长度
+	Time_Condition cond1;				//条件1，即时间参数
+	unsigned char cond2_len;			//条件2长度
+	Sensor_Condition cond2;				//条件2，即传感器参数
+	unsigned char cond3_len;			//条件3-4长度，预留
 	unsigned char cond4_len;
-	unsigned char func_type;
-	Func_Para func_para;
+	unsigned char func_type;			//功能类型：0-场景，1-序列
+	Func_Para func_para;				//功能参数
 } Logic;
 
-/*  */
+/* 8 byte */
 typedef struct
 {
-	Time time;
-	unsigned char logic_seq;
+	Time time;						//触发时间
+	unsigned char logic_seq;		//对应逻辑
 } Time_Entry;
