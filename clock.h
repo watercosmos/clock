@@ -15,6 +15,11 @@
 
 #define RS485EN		PORTE_Bit2
 #define WDI			PORTF_Bit3		//踢狗
+#define LED			PORTE_Bit6		//LED灯
+#define SCL			PORTF_Bit0
+#define SDA			PORTF_Bit1
+#define sda_in		DDRF &= 0xFD
+#define sda_out		DDRF |= 0x02
 
 struct
 {

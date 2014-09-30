@@ -2,6 +2,7 @@
 #include "clock.h"
 #include "timeapi.h"
 #include "time.h"
+#include "iic.h"
 #include "assemble.h"
 
 volatile unsigned char filled;
