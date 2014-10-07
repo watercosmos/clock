@@ -259,7 +259,6 @@ void del_logic(void)
 	TOTX   = 1;
 }
 
-/* 继电器已有计时功能，这一段不需要了
 void tx_to_switch(Func_Para fp, unsigned char ft)
 {
 	unsigned char type;
@@ -282,6 +281,7 @@ void tx_to_switch(Func_Para fp, unsigned char ft)
 	TOTX   = 1;
 }
 
+/* 继电器已有计时功能，这一段不需要了
 void response_to_switch(void)
 {
 	//保存继电器发来的信息，添加时间表

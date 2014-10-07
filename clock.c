@@ -10,7 +10,6 @@ volatile unsigned int  length;
 
 void sys_init(void);
 void start_tx(void);
-void delay_10ms(void);
 void rx_rst(void);
 void crc_check(void);
 void rx_handler(void);
@@ -168,8 +167,9 @@ void rx_handler(void)
 				tx_mac();
 				break;
 			case 0x8C:
-				if (!strncmp(mac, rx_buf + 12, 8))	//new, to be tested
-					set_id();
+				//unresolved
+				//if (!strncmp(mac, rx_buf + 12, 8))
+				set_id();
 				break;
 			case 0x8D:
 				set_enable();
@@ -206,9 +206,11 @@ void rx_handler(void)
 			default:
 				break;
 		}
-	} else if ((rx_buf[7] & 0x3F) == 0x05 && (rx_buf[8] & 0xBF) == 0xBF) {
-		response_to_switch();
 	}
+	//no need to do this for switch
+	/*else if ((rx_buf[7] & 0x3F) == 0x05 && (rx_buf[8] & 0xBF) == 0xBF) {
+		response_to_switch();
+	}*/
 	rx_rst();
 }
 
@@ -279,13 +281,6 @@ void sys_init(void)
 	TIMSK &= 0x3F;
 }
 
-/* 1ms延时函数，用于踢狗 */
-void delay_10ms(void)
-{
-	unsigned int i;
-	for (i = 0; i < 11400; i++);
-}
-
 /* 开始发送 */
 void start_tx(void)
 {
@@ -336,7 +331,7 @@ void list_for_time_entry(void)
 
 /**
  * 遍历逻辑表
- * 若逻辑未开启，重置时间条件为0
+ * 若逻辑未开启，重置逻辑内的时间条件为0
  * 若逻辑触发，发送指令给继电器，并将时间条件重置为0
  */
 void list_for_logic_entry(void)

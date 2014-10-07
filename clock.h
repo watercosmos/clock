@@ -58,6 +58,7 @@ unsigned char net_id = 0x01;
 unsigned char timestamp[2] = {0};
 unsigned char dev_models[12] = {0};
 unsigned char enable = 0x01;
+unsigned char IICSTOP;
 
 unsigned char mac[8] = {0x00, 0x00, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6};
 unsigned char soft_version[10] = {0};
