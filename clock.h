@@ -2,8 +2,8 @@
 #include "iom64.h"
 #include "ina90.h"
 //#include "delay.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 #include "data.h"
 
 #define BAUDRATE	9600			//波特率
