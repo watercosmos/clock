@@ -1,4 +1,7 @@
-﻿#include <iom64a.h>
+﻿#ifndef TIMEAPI_H
+#define TIMEAPI_H
+
+#include <iom64a.h>
 #include <iomacro.h >
 #define  uchar unsigned char
 #define  uint  unsigned int
@@ -380,3 +383,5 @@ void w_and_r()
 
     }
 }*/
+
+#endif

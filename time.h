@@ -1,3 +1,6 @@
+#ifndef TIME_H
+#define TIME_H
+
 /* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
 int time_cmp(const Time * t1, const Time * t2)
 {
@@ -240,3 +243,5 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 		return *(unsigned char *)(d1 + 2 * sizeof(unsigned char)) - \
 			 *(unsigned char *)(d1 + 2 * sizeof(unsigned char));
 }*/
+
+#endif

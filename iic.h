@@ -1,3 +1,6 @@
+#ifndef IIC_H
+#define IIC_H
+
 /* 1ms延时函数，用于踢狗 */
 void delay_10ms(void)
 {
@@ -204,3 +207,5 @@ void AT24C64_R(unsigned char *data, unsigned int address, unsigned char n)
 	       delay_10ms();
 	       WDI=1;
 }
+
+#endif

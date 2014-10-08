@@ -1,4 +1,7 @@
-﻿/* 时间 7 byte */
+﻿#ifndef DATA_H
+#define DATA_H
+
+/* 时间 7 byte */
 typedef struct
 {
 	unsigned char year;
@@ -71,3 +74,5 @@ typedef struct
 	Time time;						//触发时间
 	unsigned char logic_seq;		//对应逻辑
 } Time_Entry;
+
+#endif

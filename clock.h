@@ -1,3 +1,6 @@
+#ifndef CLOCK_H
+#define CLOCK_H
+
 /* clock.h */
 #include "iom64.h"
 #include "ina90.h"
@@ -72,3 +75,5 @@ unsigned char logic_sum;
 unsigned char time_sum;
 
 int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+#endif

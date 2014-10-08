@@ -1,3 +1,6 @@
+#ifndef ASSEMBLE_H
+#define ASSEMBLE_H
+
 /* CRC校验算法 */
 void calc_crc(unsigned char buf)
 {
@@ -286,3 +289,5 @@ void response_to_switch(void)
 {
 	//保存继电器发来的信息，添加时间表
 }*/
+
+#endif
