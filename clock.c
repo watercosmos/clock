@@ -1,8 +1,7 @@
 ﻿/* clock.c */
 #include "clock.h"
-#include "timeapi.h"
 #include "time.h"
-#include "iic.h"
+#include "sd2400.h"
 #include "assemble.h"
 
 volatile unsigned char filled;
@@ -13,8 +12,9 @@ void start_tx(void);
 void rx_rst(void);
 void crc_check(void);
 void rx_handler(void);
-void list_for_time_entry(void);
-void list_for_logic_entry(void);
+void delay_10ms(void);
+void time_loop(void);
+void logic_loop(void);
 
 void main(void)
 {
@@ -32,8 +32,8 @@ void main(void)
 		if (filled)
 			rx_handler();
 
-		list_for_time_entry();
-		list_for_logic_entry();
+		time_loop();
+		logic_loop();
 
 		WDI = 0;
 		delay_10ms();
@@ -148,7 +148,9 @@ void crc_check(void)
 void rx_handler(void)
 {
 	filled = 0;
-	if (enable != 1 && (rx_buf[8] & 0xBF) != 0x8D) {
+	if (enable != 1 && (rx_buf[8] & 0xBF) != 0x80
+					&& (rx_buf[8] & 0xBF) != 0x82
+					&& (rx_buf[8] & 0xBF) != 0x85) {
 		rx_rst();
 		return;
 	}
@@ -157,20 +159,20 @@ void rx_handler(void)
 			case 0x80:
 				tx_status();
 				break;
-			case 0x84:
+			case 0x81:
 				set_abstract();
 				break;
-			case 0x89:
+			case 0x82:
 				tx_abstract();
 				break;
-			case 0x8B:
+			case 0x83:
 				tx_mac();
 				break;
-			case 0x8C:
+			case 0x84:
 				if (memcmp(mac, rx_buf + 12, 8))
 					set_id();
 				break;
-			case 0x8D:
+			case 0x85:
 				set_enable();
 				break;
 			default:
@@ -261,6 +263,8 @@ void sys_init(void)
 	DDRD  = 0x08;
 	PORTD = 0x00;
 
+	WDTCR = 0x00;
+
 	UCSR0C  = 0x06;		//USART0 9600 8, n,1无倍速
 	UBRR0L  = (F_CPU/BAUDRATE/16-1)%256;	//U2X=0时的公式计算
 	UBRR0H  = (F_CPU/BAUDRATE/16-1)/256;
@@ -299,13 +303,20 @@ void rx_rst(void)
 	rx_pos  = 0;
 }
 
+/* 1ms延时函数，用于踢狗 */
+void delay_10ms(void)
+{
+  unsigned int i;
+  for (i = 0; i < 11400; i++);
+}
+
 /**
  * 遍历时间表
  * 若时间匹配，则将对应逻辑的条件1置为真
  * 并计算该逻辑的下一次触发时间，加入时间表
  * 最后从时间表内删除当前时间表项
  */
-void list_for_time_entry(void)
+void time_loop(void)
 {
 	int i, j;
 	unsigned char ls;
@@ -333,7 +344,7 @@ void list_for_time_entry(void)
  * 若逻辑未开启，重置逻辑内的时间条件为0
  * 若逻辑触发，发送指令给继电器，并将时间条件重置为0
  */
-void list_for_logic_entry(void)
+void logic_loop(void)
 {
 	int i, enable = 0;
 
@@ -366,6 +377,9 @@ void list_for_logic_entry(void)
 		if (enable) {
 			tx_to_switch(logic_entry[i].func_para, logic_entry[i].func_type);
 			logic_entry[i].cond1_enable = 0;
+			logic_entry[i].cond2_enable = 0;
+			logic_entry[i].cond3_enable = 0;
+			logic_entry[i].cond4_enable = 0;
 		}
 	}
 }

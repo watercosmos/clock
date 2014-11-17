@@ -1,6 +1,8 @@
 #ifndef TIME_H
 #define TIME_H
 
+void I2CReadDate(Time *times);
+
 /* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
 int time_cmp(const Time * t1, const Time * t2)
 {

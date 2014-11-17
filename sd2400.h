@@ -235,11 +235,10 @@ void I2CReadDate(Time *times)
                         
 		}
 	}
-	//date_to_time(date,times);
 	times->second = date[0];
 	times->minute = date[1];
-	times->hour = date[2];
-	times->week = date[3];
+	times->hour = date[2] & 0x7F;
+	times->week = which_week(date[6], date[5], date[4]);
 	times->day = date[4];
 	times->month = date[5];
 	times->year = date[6];
@@ -259,19 +258,20 @@ void I2CWriteDate(Time *times)
 	I2CSendByte(0x64);      
 	I2CWaitAck();   
     	I2CSendByte(0x00);		//设置写起始地址      
-	I2CWaitAck();	
+	I2CWaitAck();
 	I2CSendByte(times->second);		// second     
-	I2CWaitAck();	
+	I2CWaitAck();
 	I2CSendByte(times->minute);		//minute      
-	I2CWaitAck();	
-	I2CSendByte(times->hour);		//hour ,二十四小时制     
-	I2CWaitAck();	
-	I2CSendByte(times->week);		//week      
-	I2CWaitAck();	
+	I2CWaitAck();
+	I2CSendByte(times->hour | 0x80);		//hour ,二十四小时制     
+	I2CWaitAck();
+	//week，星期几
+	I2CSendByte(calc_weekday(times->year, times->month, times->day));
+	I2CWaitAck();
 	I2CSendByte(times->day);		//day      
-	I2CWaitAck();	
+	I2CWaitAck();
 	I2CSendByte(times->month);		//month      
-	I2CWaitAck();	
+	I2CWaitAck();
 	I2CSendByte(times->year);		//year      
 	I2CWaitAck();	
 	I2CStop();
@@ -328,60 +328,5 @@ void WriteTimeOff(void)
 	I2CWaitAck();
 	I2CStop(); 
 }
-
-//将读出的时间数组写入时间结构中
-/*void date_to_time(uchar date[],Time t)
-{
-  t.second=date[0];
-  t.minute=date[1];
-  t.hour=date[2];
-  t.week=date[3];
-  t.day=date[4];
-  t.month=date[5];
-  t.year=date[6];
-}*/
-
-/*//test
-void w_and_r()
-{
-  WriteTimeOn();
-
-	I2CStart();
-	I2CSendByte(0x64);      
-	I2CWaitAck();   
-    	I2CSendByte(0x03);		//设置写起始地址      
-	I2CWaitAck();	
-        //I2CSendByte(0x30);      
-	//I2CWaitAck();
-        //I2CSendByte(0x21);      
-	//I2CWaitAck();
-        I2CStart();  	
-        I2CSendByte(0x65);      
-	I2CWaitAck();
-        
-   //WriteTimeOff(); 
-   
-        date[2]=I2CReceiveByte();
-        I2CAck();
-        date[3]=I2CReceiveByte();
-        I2CNoAck();
-	delay_1us();
-	I2CStop();
-}*/
-
-//========================================================================= 
-/*void main(void)
-{  
-        uchar rdate[7];
-	uchar times[7]={0x00,0x30,0x95,0x02,0x15,0x04,0x14};         //小时注意，times[2]；
-	I2CWriteDate(times); 		//写实时时钟
- 	while(1)
-	{
-          //w_and_r();
- 		I2CReadDate(rdate); 		//读实时时钟	
-         	delay_ms(1000);		//延时1S
-
-    }
-}*/
 
 #endif

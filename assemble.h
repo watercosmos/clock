@@ -65,7 +65,7 @@ void set_abstract(void)
 	memcpy(dev_models, rx_buf + 12, 12);
 	enable = rx_buf[24];
 
-	set_header(0x00, 0x00, 0x04, 0x00);
+	set_header(0x00, 0x00, 0x01, 0x00);
 	set_tail(12);
 
 	tx_num = 14;
@@ -75,7 +75,7 @@ void set_abstract(void)
 /* 发送摘要信息 */
 void tx_abstract(void)
 {
-	set_header(0x1F, 0x00, 0x09, 0x00);
+	set_header(0x1F, 0x00, 0x02, 0x00);
 	memcpy(tx_buf + 12, dev_models, 12);
 	tx_buf[24] = enable;
 	memcpy(tx_buf + 25, mac, 8);
@@ -89,7 +89,7 @@ void tx_abstract(void)
 /* 汇报MAC */
 void tx_mac(void)
 {
-	set_header(0x08, 0x00, 0x0B, 0x00);
+	set_header(0x08, 0x00, 0x03, 0x00);
 	memcpy(tx_buf + 12, mac, 8);
 	set_tail(20);
 
@@ -104,7 +104,7 @@ void set_id(void)
 	dev_id = rx_buf[20];
 	net_id = rx_buf[21];
 
-	set_header(0x00, 0x00, 0x0C, 0x00);
+	set_header(0x00, 0x00, 0x04, 0x00);
 	set_tail(12);
 
 	tx_num = 14;
@@ -114,8 +114,9 @@ void set_id(void)
 /* 启用/禁用模块 */
 void set_enable(void)
 {
-	enable = rx_buf[10];
-	set_header(0x00, 0x00, 0x0D, 0x00);
+	memcpy(timestamp, rx_buf + 10, 2);
+	enable = rx_buf[12];
+	set_header(0x00, 0x00, 0x05, 0x00);
 	set_tail(12);
 
 	tx_num = 14;
@@ -169,6 +170,7 @@ void set_logic(void)
 	for (i = 0; i < logic_sum; i++)
 		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1))
 			return;
+
 	memcpy(timestamp, rx_buf + 10, 2);
 	memcpy(logic_entry + logic_sum, rx_buf + 13, 32);
 	logic_sum++;
@@ -207,12 +209,13 @@ void set_logic_enable(void)
 {
 	unsigned char i;
 	
-	for (i = 0; i < logic_sum; i++)
+	for (i = 0; i < logic_sum; i++) {
 		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
 			memcpy(timestamp, rx_buf + 10, 2);
 			logic_entry[i].enable = rx_buf[13] & 0x01;
 			break;
 		}
+	}
 
 	set_header(0x00, 0x05, 0x07, 0x00);
 	set_tail(12);
