@@ -157,18 +157,15 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 		memcpy(time_entry + time_sum, &t, sizeof(Time));
 		time_entry[time_sum].logic_seq = ls;
 		time_sum++;
-		//循环次数减1
-		if (tc->loop_num != 0)
-			tc->loop_num--;
 		return;
 	}
 	
 	//单次逻辑直接返回
 	if (tc->loop_flag == 0)
-			return;
+		return;
 
 	switch (tc->loop_unit) {
-		case 0:			//按天循环	
+		case 0:			//按天循环
 			while (time_cmp(&now, &t) >= 0) {
 				hex_to_dec(&t, &t_dec);
 				t_dec.day += tc->interval;
@@ -212,17 +209,6 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 					dec_to_hex(&t_dec, &t);
 				}
 			}*/
-			break;
-	}
-
-	switch (tc->loop_end_flag) {
-		case 0:			//无结束
-		case 1:			//按重复次数，未实现，不需要？
-			break;
-		case 2:			//按结束日期
-			if (date_cmp(&t, tc->end_date) >= 0)
-				return;		//是否应该删除逻辑了？
-		default:
 			break;
 	}
 

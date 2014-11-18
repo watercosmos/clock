@@ -59,7 +59,8 @@ unsigned int crc;
 unsigned char dev_id = 0x04;
 unsigned char net_id = 0x01;
 unsigned char timestamp[2] = {0};
-unsigned char dev_models[12] = {0};
+//设备型号默认为"clock"
+unsigned char dev_models[12] = {0x63, 0x6C, 0x6F, 0x63, 0x6B, 0x00};
 unsigned char enable = 0x01;
 unsigned char IICSTOP;
 

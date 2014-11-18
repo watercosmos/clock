@@ -182,8 +182,9 @@ void set_logic(void)
 	TOTX   = 1;
 
 	//一旦加入新逻辑，立即计算该逻辑下一次触发时间并加入时间表
-	calc_time(&(logic_entry[logic_sum - 1].cond1),
-			logic_entry[logic_sum - 1].logic_seq);
+	if (logic_entry[logic_sum - 1].enable)
+		calc_time(&(logic_entry[logic_sum - 1].cond1),
+				logic_entry[logic_sum - 1].logic_seq);
 }
 
 /* 发送一条逻辑 */
@@ -243,8 +244,8 @@ void del_logic(void)
 {
 	unsigned char i, j;
 
-	for (i = 0; i < logic_sum; i++)
-		if (logic_entry[i].logic_seq == (rx_buf[12] >> 1)) {
+	for (i = 0; i < logic_sum; i++) {
+		if (logic_entry[i].logic_seq == rx_buf[12]) {
 			memcpy(timestamp, rx_buf + 10, 2);
 			//将被删除逻辑后面的所有逻辑前移，
 			memmove(logic_entry + i, logic_entry + i + 1,
@@ -255,14 +256,16 @@ void del_logic(void)
 				logic_entry[j].logic_seq--;
 			memset(logic_entry + logic_sum, 0,
 				   (MAX_LOGIC_SIZE - logic_sum) * sizeof(Logic));
+
+			//成功删除响应
+			set_header(0x00, 0x05, 0x09, 0x00);
+			set_tail(12);
+
+			tx_num = 14;
+			TOTX   = 1;
 			break;
 		}
-
-	set_header(0x00, 0x05, 0x09, 0x00);
-	set_tail(12);
-
-	tx_num = 14;
-	TOTX   = 1;
+	}
 }
 
 void tx_to_switch(Func_Para fp, unsigned char ft)
