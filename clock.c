@@ -32,6 +32,10 @@ void main(void)
 		if (filled)
 			rx_handler();
 
+		//rx_hander()中待响应的帧还在tx_buf内
+		//此时若逻辑触发，logic_loop()内调用tx_to_switch()
+		//发向继电器的帧覆盖掉了响应帧
+		//???
 		time_loop();
 		logic_loop();
 
@@ -327,12 +331,13 @@ void time_loop(void)
 			continue;
 		ls = time_entry[i].logic_seq;
 
-		for (j = 0; j < logic_sum; j++)
+		for (j = 0; j < logic_sum; j++) {
 			if (logic_entry[j].logic_seq == ls) {
-				logic_entry[j].cond1_enable = 1;
+				logic_entry[j].cond1_bool = 1;
 				calc_time(&(logic_entry[j].cond1),
 							logic_entry[j].logic_seq);
 			}
+		}
 		//这里遍历继电器逻辑表
 		del_time(i);
 		break;
@@ -346,40 +351,50 @@ void time_loop(void)
  */
 void logic_loop(void)
 {
-	int i, enable = 0;
+	unsigned char i, enable = 0;
 
 	for (i = 0; i < logic_sum; i++) {
+		//若逻辑未启用，则将四个条件重置为不成立
 		if (logic_entry[i].enable == 0) {
-			logic_entry[i].cond1_enable = 0;
+			reset_condition(i);
 			continue;
 		}
 
 		switch(logic_entry[i].logic_operator) {
-			case 0:			//逻辑与	
-				if (logic_entry[i].cond1_enable &&
-					logic_entry[i].cond2_enable &&
-					logic_entry[i].cond3_enable &&
-					logic_entry[i].cond4_enable)
+			case 0:			//逻辑与
+				if (logic_entry[i].cond1_bool &&
+					logic_entry[i].cond2_bool &&
+					logic_entry[i].cond3_bool &&
+					logic_entry[i].cond4_bool)
 					enable = 1;
 				break;
 			case 1:			//逻辑或
-				if (logic_entry[i].cond1_enable ||
-					logic_entry[i].cond2_enable ||
-					logic_entry[i].cond3_enable ||
-					logic_entry[i].cond4_enable)
+				if (logic_entry[i].cond1_bool ||
+					logic_entry[i].cond2_bool ||
+					logic_entry[i].cond3_bool ||
+					logic_entry[i].cond4_bool)
 					enable = 1;
 				break;
-			case 2:			//逻辑非
-			case 3:			//逻辑异或
+			case 2:			//逻辑与非
+				if (!(logic_entry[i].cond1_bool &&
+					logic_entry[i].cond2_bool &&
+					logic_entry[i].cond3_bool &&
+					logic_entry[i].cond4_bool))
+					enable = 1;
+				break;
+			case 3:			//逻辑或非
+				if (!(logic_entry[i].cond1_bool ||
+					logic_entry[i].cond2_bool ||
+					logic_entry[i].cond3_bool ||
+					logic_entry[i].cond4_bool))
+					enable = 1;
 			default:
 				break;
 		}
+
 		if (enable) {
 			tx_to_switch(logic_entry[i].func_para, logic_entry[i].func_type);
-			logic_entry[i].cond1_enable = 0;
-			logic_entry[i].cond2_enable = 0;
-			logic_entry[i].cond3_enable = 0;
-			logic_entry[i].cond4_enable = 0;
+			reset_condition(i);
 		}
 	}
 }

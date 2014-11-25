@@ -1,5 +1,5 @@
-﻿#ifndef TIMEAPI_H
-#define TIMEAPI_H
+﻿#ifndef SD2400
+#define SD2400
 
 #include <iom64a.h>
 #include <iomacro.h >

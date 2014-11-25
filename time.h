@@ -143,7 +143,7 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 {
 	int num = 0;
 	unsigned char diw = tc->day_in_week;	//避免修改原值
-	Time t;
+	Time t, t_dec;
 
 	//时间表已满，舍弃
 	if (time_sum >= MAX_TIME_SIZE)
@@ -179,6 +179,7 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 				t_dec.day += 7 * tc->interval;
 				fix_date(&t_dec);
 				t_dec.day -= calc_weekday(t_dec.year, t_dec.month, t_dec.day);
+				//这里没考虑周内多天
 				while (!(diw & 0x01)) {
 					diw >>= 1;
 					num++;
@@ -216,20 +217,5 @@ void calc_time(Time_Condition * tc, unsigned char ls)
 	time_entry[time_sum].logic_seq = ls;
 	time_sum++;
 }
-
-/* 日期比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
-/*int date_cmp(void * d1, void * d2)
-{
-	if (*(unsigned char *)d1 != *(unsigned char *)d2)
-		return *(unsigned char *)d1 - *(unsigned char *)d2;
-	else if (*(unsigned char *)(d1 + sizeof(unsigned char)) != \
-			 *(unsigned char *)(d1 + sizeof(unsigned char)))
-		return *(unsigned char *)(d1 + sizeof(unsigned char)) - \
-			 *(unsigned char *)(d1 + sizeof(unsigned char));
-	else if (*(unsigned char *)(d1 + 2 * sizeof(unsigned char)) != \
-			 *(unsigned char *)(d1 + 2 * sizeof(unsigned char)))
-		return *(unsigned char *)(d1 + 2 * sizeof(unsigned char)) - \
-			 *(unsigned char *)(d1 + 2 * sizeof(unsigned char));
-}*/
 
 #endif

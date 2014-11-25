@@ -16,6 +16,47 @@ void calc_crc(unsigned char buf)
 	}
 }
 
+/**
+ * 排除未启用的条件
+ * 保证它们不影响逻辑运算结果
+ */
+void exclude_unenable_condition(unsigned char i)
+{
+	switch (i) {
+		case 0:
+		case 2:
+			logic_entry[i].cond1_bool = 1;
+			logic_entry[i].cond2_bool = 1;
+			logic_entry[i].cond3_bool = 1;
+			logic_entry[i].cond4_bool = 1;
+			break;
+		case 1:
+		case 3:
+			logic_entry[i].cond1_bool = 0;
+			logic_entry[i].cond2_bool = 0;
+			logic_entry[i].cond3_bool = 0;
+			logic_entry[i].cond4_bool = 0;
+			break;
+		default:
+			break;
+	}
+}
+
+/**
+ * 重置逻辑i的所有条件
+ */
+void reset_condition(unsigned char i)
+{
+	if (logic_entry[i].cond1_enable)
+		logic_entry[i].cond1_bool = 0;
+	if (logic_entry[i].cond2_enable)
+		logic_entry[i].cond2_bool = 0;
+	if (logic_entry[i].cond3_enable)
+		logic_entry[i].cond3_bool = 0;
+	if (logic_entry[i].cond4_enable)
+		logic_entry[i].cond4_bool = 0;
+}
+
 void set_header(unsigned char len,
 				unsigned char order1,
 				unsigned char order2,
@@ -163,17 +204,23 @@ void tx_logic_sum(void)
 void set_logic(void)
 {
 	unsigned char i;
+	unsigned char current = logic_sum;	//需要增加或修改的逻辑存储位置
 
 	//排除逻辑表已满、逻辑号已存在的情况
 	if (logic_sum >= MAX_LOGIC_SIZE)
 		return;
-	for (i = 0; i < logic_sum; i++)
-		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1))
-			return;
+
+	//遍历逻辑表，序号已存在则将修改逻辑
+	for (i = 0; i < logic_sum; i++) {
+		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
+			current = i;
+			break;
+		}
+	}
 
 	memcpy(timestamp, rx_buf + 10, 2);
-	memcpy(logic_entry + logic_sum, rx_buf + 13, 32);
-	logic_sum++;
+	memset(logic_entry + current, 0, sizeof(Logic));
+	memcpy(logic_entry + current, rx_buf + 13, 32);
 
 	set_header(0x00, 0x05, 0x03, 0x00);
 	set_tail(12);
@@ -181,10 +228,19 @@ void set_logic(void)
 	tx_num = 14;
 	TOTX   = 1;
 
+	//确定逻辑需使用哪些条件
+	exclude_unenable_condition(logic_entry[current].logic_operator);
+	reset_condition(current);
+
 	//一旦加入新逻辑，立即计算该逻辑下一次触发时间并加入时间表
-	if (logic_entry[logic_sum - 1].enable)
-		calc_time(&(logic_entry[logic_sum - 1].cond1),
-				logic_entry[logic_sum - 1].logic_seq);
+	if (logic_entry[current].enable)
+		calc_time(&(logic_entry[current].cond1),
+				logic_entry[current].logic_seq);
+
+	if (current == logic_sum)
+		logic_sum++;
+
+	//该函数过长，是否会造成回复时延过大？需实验验证
 }
 
 /* 发送一条逻辑 */

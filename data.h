@@ -53,7 +53,7 @@ typedef struct
 	unsigned char enable:1;				//逻辑使能
 	unsigned char logic_seq:7;			//逻辑号
 	unsigned char reserve:2;			//保留
-	unsigned char logic_operator:2;		//逻辑运算：0-3对应与或非异或
+	unsigned char logic_operator:2;		//逻辑运算：0-3对应与或与非或非
 	unsigned char cond4_enable:1;		//条件1-4启用/禁用
 	unsigned char cond3_enable:1;
 	unsigned char cond2_enable:1;
@@ -66,6 +66,12 @@ typedef struct
 	unsigned char cond4_len;
 	unsigned char func_type;			//功能类型：0-场景，1-序列
 	Func_Para func_para;				//功能参数
+	//用于判断条件成立与否，非实际逻辑内容
+	unsigned char cond4_bool:1;
+	unsigned char cond3_bool:1;
+	unsigned char cond2_bool:1;
+	unsigned char cond1_bool:1;
+	unsigned char reserve2:4;
 } Logic;
 
 /* 8 byte */
