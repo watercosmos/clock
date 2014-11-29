@@ -216,3 +216,6 @@ pip-log.txt
 
 #CTags
 .tags*
+
+#execute
+*.exe

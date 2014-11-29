@@ -91,7 +91,7 @@ void set_tail(unsigned char len)
 void tx_status(void)
 {
 	set_header(0x0A, 0x00, 0x00, 0x00);
-	memcpy(tx_buf + 12, mac, 8);
+	memcpy(tx_buf + 12, MAC, 8);
 	memcpy(tx_buf + 20, timestamp, 2);
 	set_tail(22);
 
@@ -119,7 +119,7 @@ void tx_abstract(void)
 	set_header(0x1F, 0x00, 0x02, 0x00);
 	memcpy(tx_buf + 12, dev_models, 12);
 	tx_buf[24] = enable;
-	memcpy(tx_buf + 25, mac, 8);
+	memcpy(tx_buf + 25, MAC, 8);
 	memcpy(tx_buf + 33, soft_version, 10);
 	set_tail(43);
 
@@ -131,7 +131,7 @@ void tx_abstract(void)
 void tx_mac(void)
 {
 	set_header(0x08, 0x00, 0x03, 0x00);
-	memcpy(tx_buf + 12, mac, 8);
+	memcpy(tx_buf + 12, MAC, 8);
 	set_tail(20);
 
 	tx_num = 22;

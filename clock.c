@@ -173,7 +173,7 @@ void rx_handler(void)
 				tx_mac();
 				break;
 			case 0x84:
-				if (memcmp(mac, rx_buf + 12, 8))
+				if (!memcmp(MAC, rx_buf + 12, 8))
 					set_id();
 				break;
 			case 0x85:
