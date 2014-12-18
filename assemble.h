@@ -270,6 +270,7 @@ void set_logic_enable(void)
 		if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
 			memcpy(timestamp, rx_buf + 10, 2);
 			logic_entry[i].enable = rx_buf[13] & 0x01;
+			reset_condition(i);
 			break;
 		}
 	}

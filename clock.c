@@ -32,8 +32,8 @@ void main(void)
 			TOTX = 0;
 		}
 
-		time_loop();
-		logic_loop();
+		//time_loop();
+		//logic_loop();
 
 		WDI = 0;
 		delay_10ms();
@@ -246,10 +246,19 @@ __interrupt void t1_ovf_isr(void)
 	}
 }
 
-/* 定时器2中断 
+/* 定时器0中断 */
 #pragma vector=TIMER0_OVF_vect
-__interrupt void t2_ovf_isr(void)
-{}*/
+__interrupt void t0_ovf_isr(void)
+{
+	timer++;
+
+	if (timer < 100)
+		return;
+
+	timer = 0;
+	time_loop();
+	logic_loop();
+}
 
 /* 初始化函数 */
 void sys_init(void)
@@ -272,12 +281,12 @@ void sys_init(void)
 	UCSR0A |= 0x40;		//关键！！！
 	UCSR0B  = 0xd8;		//使能接收 发送中断，使能接收，使能发送
 
-	/*TCCR0  = 0x00;		//停止定时器
-	TCNT0  = 0x53;		//初始值
-	OCR0   = 0x52;		//匹配值
+	TCCR0  = 0x00;		//停止定时器
+	TCNT0  = 0x53;		//初始值 4 ms
+	OCR0   = 0x52;		//匹配值 unvalid
 	TIMSK |= 0x01;		///中断允许
 	TIFR  |= 0x01;
-	TCCR0  = 0x04;		//启动定时器*/
+	TCCR0  = 0x04;		//启动定时器，*256
 
 	TCCR2  = 0x00;		//停止定时器
 
@@ -318,18 +327,16 @@ void delay_10ms(void)
  */
 void time_loop(void)
 {
-	int i, j;
-	int n = time_sum;
-	unsigned char ls;
+	unsigned char i, j;
+	unsigned char n = time_sum;
 
 	I2CReadDate(&now);
 	for (i = 0; i < n; i++) {
 		if (time_cmp(&now, &(time_entry[i].time)))
 			continue;
-		ls = time_entry[i].logic_seq;
 
 		for (j = 0; j < logic_sum; j++) {
-			if (logic_entry[j].logic_seq == ls) {
+			if (logic_entry[j].logic_seq == time_entry[i].logic_seq) {
 				logic_entry[j].cond1_bool = 1;
 				calc_time(&(logic_entry[j].cond1),
 							logic_entry[j].logic_seq);
@@ -350,11 +357,8 @@ void logic_loop(void)
 	unsigned char i, enable = 0;
 
 	for (i = 0; i < logic_sum; i++) {
-		//若逻辑未启用，则将四个条件重置为不成立
-		if (logic_entry[i].enable == 0) {
-			reset_condition(i);
+		if (logic_entry[i].enable == 0)
 			continue;
-		}
 
 		switch(logic_entry[i].logic_operator) {
 			case 0:			//逻辑与
