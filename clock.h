@@ -75,6 +75,6 @@ unsigned char logic_sum;
 unsigned char time_sum;
 
 int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-int timer;
+//int timer;
 
 #endif

@@ -16,10 +16,7 @@ void calc_crc(unsigned char buf)
 	}
 }
 
-/**
- * 排除未启用的条件
- * 保证它们不影响逻辑运算结果
- */
+
 void exclude_unenable_condition(unsigned char i)
 {
 	switch (i) {
@@ -228,19 +225,34 @@ void set_logic(void)
 	tx_num = 14;
 	TOTX   = 1;
 
+	/*
+	 * 排除未启用的条件
+	 * 保证它们不影响逻辑运算结果
+	 */
+	 if (logic_entry[current].logic_operator == 0 ||
+	 	 logic_entry[current].logic_operator == 2) {
+	 	logic_entry[i].cond1_bool = 1;
+		logic_entry[i].cond2_bool = 1;
+		logic_entry[i].cond3_bool = 1;
+		logic_entry[i].cond4_bool = 1;
+	 } else {
+	 	logic_entry[i].cond1_bool = 0;
+		logic_entry[i].cond2_bool = 0;
+		logic_entry[i].cond3_bool = 0;
+		logic_entry[i].cond4_bool = 0;
+	 }
+
 	//确定逻辑需使用哪些条件
-	exclude_unenable_condition(logic_entry[current].logic_operator);
 	reset_condition(current);
 
-	//一旦加入新逻辑，立即计算该逻辑下一次触发时间并加入时间表
+	//若修改逻辑，则直接返回，否则增加逻辑总数、计算时间表
+	if (current != logic_sum)
+		return;
+
+	logic_sum++;
 	if (logic_entry[current].enable)
 		calc_time(&(logic_entry[current].cond1),
-				logic_entry[current].logic_seq);
-
-	if (current == logic_sum)
-		logic_sum++;
-
-	//该函数过长，是否会造成回复时延过大？需实验验证
+				  logic_entry[current].logic_seq);
 }
 
 /* 发送一条逻辑 */

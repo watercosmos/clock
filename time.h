@@ -141,8 +141,7 @@ void del_time(int i)
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
 void calc_time(Time_Condition * tc, unsigned char ls)
 {
-	int num = 0;
-	unsigned char diw = tc->day_in_week;	//避免修改原值
+	unsigned char num = 0, diw = tc->day_in_week;	//避免修改原值
 	Time t, t_dec;
 
 	//时间表已满，舍弃
