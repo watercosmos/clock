@@ -24,18 +24,14 @@ void main(void)
 	TOTX = 1;
 
 	while (1) {
+		if (filled)
+			rx_handler();
+
 		if (TOTX && !BUSY) {
 			start_tx();
 			TOTX = 0;
 		}
 
-		if (filled)
-			rx_handler();
-
-		//rx_hander()中待响应的帧还在tx_buf内
-		//此时若逻辑触发，logic_loop()内调用tx_to_switch()
-		//发向继电器的帧覆盖掉了响应帧
-		//???
 		time_loop();
 		logic_loop();
 
@@ -323,10 +319,11 @@ void delay_10ms(void)
 void time_loop(void)
 {
 	int i, j;
+	int n = time_sum;
 	unsigned char ls;
 
 	I2CReadDate(&now);
-	for (i = 0; i < time_sum; i++) {
+	for (i = 0; i < n; i++) {
 		if (time_cmp(&now, &(time_entry[i].time)))
 			continue;
 		ls = time_entry[i].logic_seq;
@@ -338,7 +335,6 @@ void time_loop(void)
 							logic_entry[j].logic_seq);
 			}
 		}
-		//这里遍历继电器逻辑表
 		del_time(i);
 		break;
 	}
@@ -395,6 +391,7 @@ void logic_loop(void)
 		if (enable) {
 			tx_to_switch(logic_entry[i].func_para, logic_entry[i].func_type);
 			reset_condition(i);
+			enable = 0;
 		}
 	}
 }

@@ -23,6 +23,7 @@ int main(void)
 {
 	char s[120];
 	const char copy[13] = "\"<nul | clip";
+	const char clear[16] = "echo off | clip";
 
 	puts("Please enter a hexadecimal string (q to quit):");
 	
@@ -112,6 +113,7 @@ int main(void)
 	
 		memcpy(cmd + strlen(cmd), s, strlen(s));
 		strcpy(cmd + strlen(cmd), copy);
+		system(clear);
 		system(cmd);
 	
 		puts("The complete command has been copied to your clipboard.\n\n"
