@@ -32,8 +32,13 @@ void main(void)
             TOTX = 0;
         }
 
-        //time_loop();
+        time_loop();
         logic_loop();
+
+        if (TOTX && !BUSY) {
+            start_tx();
+            TOTX = 0;
+        }
 
         WDI = 0;
         delay_10ms();
@@ -251,11 +256,11 @@ __interrupt void t0_ovf_isr(void)
 {
     timer++;
 
-    if (timer < 100)
+    if (timer < 25)     //600 ms
         return;
 
     timer = 0;
-    time_loop();
+    I2CReadDate(&now);
 }
 
 /* 初始化函数 */
@@ -279,7 +284,7 @@ void sys_init(void)
     UCSR0A |= 0x40;       //关键！！！
     UCSR0B  = 0xd8;       //使能接收 发送中断，使能接收，使能发送
 
-    /* 定时器0 4ms */
+    /* 定时器0 23.7ms */
     TCCR0  = 0x00;        //停止定时器
     TCNT0  = 0x53;        //初始值
     OCR0   = 0x52;        //匹配值 无效，这里是溢出中断
@@ -329,7 +334,6 @@ void time_loop(void)
     u8 i, j;
     u8 n = time_sum;
 
-    I2CReadDate(&now);
     for (i = 0; i < n; i++) {
         if (time_cmp(&now, &(time_entry[i].time)))
             continue;

@@ -89,7 +89,7 @@ void fix_date(Time *t)
 
 /* 由年月日计算星期几
    返回值0-6代表周一到周日 */
-u8 calc_weekday(u8 y, u8 m, u8 d)
+u8 calc_weekday(int y, u8 m, u8 d)
 {
     u8 w;
 
