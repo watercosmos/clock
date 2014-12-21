@@ -394,7 +394,7 @@ void logic_loop(void)
         }
 
         if (enable) {
-            tx_to_switch(logic_entry[i].func_para, logic_entry[i].func_type);
+            tx_to_switch(&(logic_entry[i]));
             reset_condition(i);
             enable = 0;
         }

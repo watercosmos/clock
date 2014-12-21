@@ -4,7 +4,7 @@
 void I2CReadDate(Time *times);
 
 /* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
-u8 time_cmp(const Time * t1, const Time * t2)
+int time_cmp(const Time * t1, const Time * t2)
 {
     if (t1->year != t2->year)
         return t1->year - t2->year;
@@ -23,7 +23,7 @@ u8 time_cmp(const Time * t1, const Time * t2)
 }
 
 /* 日期比较函数 */
-u8 date_cmp(const Time * t1, const u8 * t2)
+int date_cmp(const Time * t1, const u8 * t2)
 {
     if (t1->year != *(t2 + 0))
         return t1->year - *(t2 + 0);

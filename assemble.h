@@ -335,32 +335,18 @@ void del_logic(void)
     }
 }
 
-void tx_to_switch(Func_Para fp, u8 ft)
+void tx_to_switch(const Logic *le)
 {
-    u8 type;
-    
-    if (ft == 0)
-        type = 0x21;
-    else if (ft == 1)
-        type = 0x41;
+    set_header(0x03, 0x03, 0xBE, 0x00);
+    tx_buf[2]  = le->func_para.dev_id;
+    tx_buf[3]  = le->func_para.net_id;
+    tx_buf[12] = le->func_type << 4 | 0x01;
+    tx_buf[13] = le->func_para.area_id;
+    tx_buf[14] = le->func_para.id;
+    set_tail(15);
 
-    set_header(0x02, 0x03, 0xBE, 0x00);
-    tx_buf[2]  = fp.dev_id;
-    tx_buf[3]  = fp.net_id;
-    tx_buf[12] = type;
-    tx_buf[13] = fp.area_id;
-    tx_buf[13] <<= 5;
-    tx_buf[13] = tx_buf[13] | fp.id;
-    set_tail(14);
-
-    tx_num = 16;
+    tx_num = 17;
     TOTX   = 1;
 }
-
-/* 继电器已有计时功能，这一段不需要了
-void response_to_switch(void)
-{
-    //保存继电器发来的信息，添加时间表
-}*/
 
 #endif
