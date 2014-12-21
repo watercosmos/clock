@@ -32,7 +32,7 @@ void main(void)
             TOTX = 0;
         }
 
-        time_loop();
+        //time_loop();
         logic_loop();
 
         WDI = 0;
@@ -245,7 +245,7 @@ __interrupt void t1_ovf_isr(void)
     }
 }
 
-/* 定时器0中断 
+/* 定时器0中断 */
 #pragma vector=TIMER0_OVF_vect
 __interrupt void t0_ovf_isr(void)
 {
@@ -256,8 +256,7 @@ __interrupt void t0_ovf_isr(void)
 
     timer = 0;
     time_loop();
-    logic_loop();
-}*/
+}
 
 /* 初始化函数 */
 void sys_init(void)
@@ -280,14 +279,13 @@ void sys_init(void)
     UCSR0A |= 0x40;       //关键！！！
     UCSR0B  = 0xd8;       //使能接收 发送中断，使能接收，使能发送
 
-    /* 定时器0 4ms
+    /* 定时器0 4ms */
     TCCR0  = 0x00;        //停止定时器
-    TCNT0  = 0x53;        //初始值 4 ms
+    TCNT0  = 0x53;        //初始值
     OCR0   = 0x52;        //匹配值 无效，这里是溢出中断
     TIMSK |= 0x01;        ///中断允许
     TIFR  |= 0x01;
-    TCCR0  = 0x04;        //启动定时器，256分频
-    */
+    TCCR0  = 0x07;        //启动定时器，1024分频
 
     TCCR2  = 0x00;        //停止定时器
 
@@ -340,7 +338,7 @@ void time_loop(void)
             if (logic_entry[j].logic_seq == time_entry[i].logic_seq) {
                 logic_entry[j].cond1_bool = 1;
                 calc_time(&(logic_entry[j].cond1),
-                            logic_entry[j].logic_seq);
+                          logic_entry[j].logic_seq);
             }
         }
         del_time(i);

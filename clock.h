@@ -156,6 +156,6 @@ u8 logic_sum;
 u8 time_sum;
 
 const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-//int timer;
+unsigned int timer;
 
 #endif
