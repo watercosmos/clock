@@ -4,7 +4,7 @@
 void I2CReadDate(Time *times);
 
 /* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
-int time_cmp(const Time * t1, const Time * t2)
+u8 time_cmp(const Time * t1, const Time * t2)
 {
     if (t1->year != t2->year)
         return t1->year - t2->year;
@@ -23,7 +23,7 @@ int time_cmp(const Time * t1, const Time * t2)
 }
 
 /* 日期比较函数 */
-int date_cmp(const Time * t1, const unsigned char * t2)
+u8 date_cmp(const Time * t1, const u8 * t2)
 {
     if (t1->year != *(t2 + 0))
         return t1->year - *(t2 + 0);
@@ -62,7 +62,7 @@ void dec_to_hex(const Time *t, Time *ret)
 /* 修正日期，当日期、月份超出定值 */
 void fix_date(Time *t)
 {
-    int x;
+    u8 x;
 
     while (t->month > 12) {
         t->month -= 12;
@@ -89,9 +89,9 @@ void fix_date(Time *t)
 
 /* 由年月日计算星期几
    返回值0-6代表周一到周日 */
-int calc_weekday(int y, int m, int d)
+u8 calc_weekday(u8 y, u8 m, u8 d)
 {
-    int w;
+    u8 w;
 
     y = y + 2000;
     if (m == 1 || m == 2) {
@@ -105,23 +105,22 @@ int calc_weekday(int y, int m, int d)
 }
 
 /* 由年月日计算属于月中第几周 */
-int which_week(int y, int m, int d)
+u8 which_week(u8 y, u8 m, u8 d)
 {
-    int firstday = calc_weekday(y, m, 1);
+    u8 firstday = calc_weekday(y, m, 1);
 
     return (d + firstday - 1) / 7 + 1;
 }
 
 /* 由年、月、周数、周中哪天计算实际日期，返回日期 */
-int calc_date(int y, int m, int w, unsigned char day_in_week)
+u8 calc_date(u8 y, u8 m, u8 w, u8 day_in_week)
 {
-    unsigned char diw = day_in_week;
-    int num = 0;
-    int firstday_in_month = calc_weekday(y, m, 1);
-    int firstday_in_week = 7 * w - firstday_in_month - 6;
+    u8 num = 0;
+    u8 firstday_in_month = calc_weekday(y, m, 1);
+    u8 firstday_in_week = 7 * w - firstday_in_month - 6;
 
-    while (!(diw & 0x01)) {
-        diw >>= 1;
+    while (!(day_in_week & 0x01)) {
+        day_in_week >>= 1;
         num++;
     }
 
@@ -129,7 +128,7 @@ int calc_date(int y, int m, int w, unsigned char day_in_week)
 }
 
 /* 删除单条时间表项 */
-void del_time(int i)
+void del_time(u8 i)
 {
     memmove(time_entry + i, time_entry + i + 1,
             (time_sum - i - 1) * sizeof(Time_Entry));
@@ -139,9 +138,9 @@ void del_time(int i)
 }
 
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
-void calc_time(Time_Condition * tc, unsigned char ls)
+void calc_time(const Time_Condition * tc, u8 ls)
 {
-    unsigned char num = 0, diw = tc->day_in_week;    //避免修改原值
+    u8 num = 0, diw = tc->day_in_week;    //避免修改原值
     Time t, t_dec;
 
     //时间表已满，舍弃
@@ -161,6 +160,10 @@ void calc_time(Time_Condition * tc, unsigned char ls)
     
     //单次逻辑直接返回
     if (tc->loop_flag == 0)
+        return;
+
+    //判断循环是否结束
+    if (tc->loop_end_flag && date_cmp(&now, tc->end_date) >= 0)
         return;
 
     switch (tc->loop_unit) {
@@ -189,7 +192,7 @@ void calc_time(Time_Condition * tc, unsigned char ls)
             }
             break;
         case 2:            //按月循环
-            //if (tc->loop_sec_unit == 0) {            //二层循环为天
+            if (tc->loop_sec_unit == 0) {            //二层循环为天
                 while (time_cmp(&now, &t) >= 0) {
                     hex_to_dec(&t, &t_dec);
                     t_dec.month += tc->interval;
@@ -197,7 +200,7 @@ void calc_time(Time_Condition * tc, unsigned char ls)
                     t_dec.day = tc->day_in_month;
                     dec_to_hex(&t_dec, &t);
                 }
-            /*} else if (tc->loop_sec_unit == 1) {    //二层循环为周
+            } else if (tc->loop_sec_unit == 1) {     //二层循环为周
                 while (time_cmp(&now, &t) >= 0) {
                     hex_to_dec(&t, &t_dec);
                     t_dec.month += tc->interval;
@@ -208,7 +211,7 @@ void calc_time(Time_Condition * tc, unsigned char ls)
                                           tc->day_in_week);
                     dec_to_hex(&t_dec, &t);
                 }
-            }*/
+            }
             break;
     }
 

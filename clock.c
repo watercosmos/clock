@@ -4,7 +4,7 @@
 #include "sd2400.h"
 #include "assemble.h"
 
-volatile unsigned char filled;
+volatile u8 filled;
 volatile unsigned int  length;
 
 void sys_init(void);
@@ -45,8 +45,7 @@ void main(void)
 #pragma vector=USART0_RXC_vect
 __interrupt void uart0_rx_isr(void)
 {
-    unsigned char rx;
-    unsigned char rx_now;
+    u8 rx, rx_now;
     unsigned int backoff;
 
     BUSY = 1;
@@ -68,8 +67,8 @@ __interrupt void uart0_rx_isr(void)
             backoff    = rand()/3 + TWO_MS;        //得到一个不小于2ms的随机延时参数
             backoff    = 0xffff - backoff;
             TCCR1B     = 0x00;                     //重装定时参数
-            TCNT1H     = (unsigned char)(backoff / 256);
-            TCNT1L     = (unsigned char)(backoff % 256);
+            TCNT1H     = (u8)(backoff / 256);
+            TCNT1L     = (u8)(backoff % 256);
             TCCR1B     = 0x01;                     //启动定时器
             tx_num     = 0;
             COLLISION  = 1;
@@ -105,13 +104,13 @@ __interrupt void uart0_rx_isr(void)
                 rx_step++;
                 rx_pos ++;
                 break;
-            case 6:            //分组长度
+            case 6:        //分组长度
                 rx_buf[rx_pos] = rx_now;
                 length = rx_now;
                 rx_step++;
                 rx_pos ++;
                 break;
-            case 12:        //payload
+            case 12:       //payload
                 rx_buf[rx_pos] = rx_now;
                 rx_pos ++;
                 if (length == 0)
@@ -133,7 +132,7 @@ __interrupt void uart0_rx_isr(void)
 /* CRC校验函数 */
 void crc_check(void)
 {
-    unsigned char i;
+    u8 i;
 
     crc = 0xffff;
     for (i = 0; i < rx_pos; i++)
@@ -329,8 +328,8 @@ void delay_10ms(void)
  */
 void time_loop(void)
 {
-    unsigned char i, j;
-    unsigned char n = time_sum;
+    u8 i, j;
+    u8 n = time_sum;
 
     I2CReadDate(&now);
     for (i = 0; i < n; i++) {
@@ -356,7 +355,7 @@ void time_loop(void)
  */
 void logic_loop(void)
 {
-    unsigned char i, enable = 0;
+    u8 i, enable = 0;
 
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].enable == 0)

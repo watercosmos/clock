@@ -26,14 +26,14 @@
 
 struct
 {
-    unsigned char bit0:1;
-    unsigned char bit1:1;
-    unsigned char bit2:1;
-    unsigned char bit3:1;
-    unsigned char bit4:1;
-    unsigned char bit5:1;
-    unsigned char bit6:1;
-    unsigned char bit7:1;
+    u8 bit0:1;
+    u8 bit1:1;
+    u8 bit2:1;
+    u8 bit3:1;
+    u8 bit4:1;
+    u8 bit5:1;
+    u8 bit6:1;
+    u8 bit7:1;
 } FlagByte;
 
 #define BUSY      FlagByte.bit0    //网络忙标志
@@ -46,35 +46,35 @@ struct
 #define MAX_LOGIC_SIZE  20
 #define MAX_TIME_SIZE   20
 
-unsigned char tx_buf[MAX_TX_BUF_SIZE] = {'A', 'B', 'C', 'D'};
-unsigned char tx_num = 4;
-unsigned char tx_pos;
-unsigned char tx_last;
+u8 tx_buf[MAX_TX_BUF_SIZE] = {'A', 'B', 'C', 'D'};
+u8 tx_num = 4;
+u8 tx_pos;
+u8 tx_last;
 
-unsigned char rx_buf[MAX_RX_BUF_SIZE];
-unsigned char rx_step;
-unsigned char rx_pos;
-unsigned int  crc;
+u8 rx_buf[MAX_RX_BUF_SIZE];
+u8 rx_step;
+u8 rx_pos;
+unsigned int crc;
 
-unsigned char dev_id = 0x04;
-unsigned char net_id = 0x01;
-unsigned char timestamp[2] = {0};
+u8 dev_id = 0x04;
+u8 net_id = 0x01;
+u8 timestamp[2] = {0};
 //设备型号默认为"clock"
-unsigned char dev_models[12] = {0x63, 0x6C, 0x6F, 0x63, 0x6B, 0x00};
-unsigned char enable = 0x01;
-unsigned char IICSTOP;
+u8 dev_models[12] = {0x63, 0x6C, 0x6F, 0x63, 0x6B, 0x00};
+u8 enable = 0x01;
+u8 IICSTOP;
 
-const unsigned char MAC[8] = {0x00, 0x00, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6};
-unsigned char soft_version[10] = {0};
+const u8 MAC[8] = {0x00, 0x00, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6};
+u8 soft_version[10] = {0};
 
 Time now;
 
 Logic logic_entry[MAX_LOGIC_SIZE];
 Time_Entry time_entry[MAX_TIME_SIZE];
-unsigned char logic_sum;
-unsigned char time_sum;
+u8 logic_sum;
+u8 time_sum;
 
-int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 //int timer;
 
 #endif

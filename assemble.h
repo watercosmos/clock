@@ -2,9 +2,9 @@
 #define ASSEMBLE_H
 
 /* CRC校验算法 */
-void calc_crc(unsigned char buf)
+void calc_crc(u8 buf)
 {
-    unsigned char j, TT;
+    u8 j, TT;
     crc = crc ^ buf;
     for (j = 0; j < 8; j++) {
         TT  = crc & 1;
@@ -17,7 +17,7 @@ void calc_crc(unsigned char buf)
 }
 
 /*
-void exclude_unenable_condition(unsigned char i)
+void exclude_unenable_condition(u8 i)
 {
     switch (i) {
         case 0:
@@ -42,7 +42,7 @@ void exclude_unenable_condition(unsigned char i)
 /**
  * 重置逻辑i的所有条件
  */
-void reset_condition(unsigned char i)
+void reset_condition(u8 i)
 {
     if (logic_entry[i].cond1_enable)
         logic_entry[i].cond1_bool = 0;
@@ -54,10 +54,7 @@ void reset_condition(unsigned char i)
         logic_entry[i].cond4_bool = 0;
 }
 
-void set_header(unsigned char len,
-                unsigned char order1,
-                unsigned char order2,
-                unsigned char result)
+void set_header(u8 len, u8 order1, u8 order2, u8 result)
 {
     tx_buf[0]  = 0xAA;
     tx_buf[1]  = 0xAA;
@@ -73,15 +70,15 @@ void set_header(unsigned char len,
     tx_buf[11] = result;        //命令结果
 }
 
-void set_tail(unsigned char len)
+void set_tail(u8 len)
 {
-    unsigned char i;
+    u8 i;
 
     crc = 0xFFFF;
     for (i = 2; i < len; i++)
         calc_crc(tx_buf[i]);
-    tx_buf[len]     = (unsigned char)crc;
-    tx_buf[len + 1] = (unsigned char)(crc / 256);
+    tx_buf[len]     = (u8)crc;
+    tx_buf[len + 1] = (u8)(crc / 256);
 }
 
 /* 响应查询是否在线命令 */
@@ -200,8 +197,8 @@ void tx_logic_sum(void)
 /* 设置一条逻辑 */
 void set_logic(void)
 {
-    unsigned char i;
-    unsigned char current = logic_sum;    //需要增加或修改的逻辑存储位置
+    u8 i;
+    u8 current = logic_sum;    //需要增加或修改的逻辑存储位置
 
     //排除逻辑表已满、逻辑号已存在的情况
     if (logic_sum >= MAX_LOGIC_SIZE)
@@ -258,7 +255,7 @@ void set_logic(void)
 /* 发送一条逻辑 */
 void tx_logic_entry(void)
 {
-    unsigned char i;
+    u8 i;
 
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == rx_buf[10]) {
@@ -277,7 +274,7 @@ void tx_logic_entry(void)
 /* 启用/禁用单条逻辑 */
 void set_logic_enable(void)
 {
-    unsigned char i;
+    u8 i;
     
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
@@ -312,7 +309,7 @@ void clear_logic(void)
 /* 删除单条逻辑 */
 void del_logic(void)
 {
-    unsigned char i, j;
+    u8 i, j;
 
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == rx_buf[12]) {
@@ -338,9 +335,9 @@ void del_logic(void)
     }
 }
 
-void tx_to_switch(Func_Para fp, unsigned char ft)
+void tx_to_switch(Func_Para fp, u8 ft)
 {
-    unsigned char type;
+    u8 type;
     
     if (ft == 0)
         type = 0x21;
