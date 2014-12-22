@@ -16,7 +16,7 @@ void calc_crc(u8 buf)
     }
 }
 
-/**
+/*
  * 重置逻辑i的所有条件
  */
 void reset_condition(u8 i)
@@ -174,8 +174,8 @@ void tx_logic_sum(void)
 /* 设置一条逻辑 */
 void set_logic(void)
 {
-    u8 i;
-    u8 current = logic_sum;    //需要增加或修改的逻辑存储位置
+    u8 i, current = logic_sum,   //需要增加或修改的逻辑存储位置
+          t_sum   = time_sum;
 
     //排除逻辑表已满、逻辑号已存在的情况
     if (logic_sum >= MAX_LOGIC_SIZE)
@@ -219,11 +219,17 @@ void set_logic(void)
     //确定逻辑需使用哪些条件
     reset_condition(current);
 
-    //若修改逻辑，则直接返回，否则增加逻辑总数、计算时间表
-    if (current != logic_sum)
-        return;
+    //若修改逻辑，则删除原逻辑的时间表项，否则增加逻辑总数
+    if (current != logic_sum) {
+        for (i = 0; i < t_sum; i++) {
+            if (time_entry[i].logic_seq == logic_entry[current].logic_seq) {
+                del_time(i);
+                break;
+            }
+        }
+    else
+        logic_sum++;
 
-    logic_sum++;
     if (logic_entry[current].enable)
         calc_time(&(logic_entry[current].cond1),
                   logic_entry[current].logic_seq);
@@ -273,7 +279,9 @@ void set_logic_enable(void)
 void clear_logic(void)
 {
     logic_sum = 0;
+    time_sum  = 0;
     memset(logic_entry, 0, MAX_LOGIC_SIZE * sizeof(Logic));
+    memset(time_entry, 0, MAX_TIME_SIZE * sizeof(Time_Entry));
     memcpy(timestamp, rx_buf + 10, 2);
 
     set_header(0x00, 0x05, 0x08, 0x00);
@@ -286,9 +294,11 @@ void clear_logic(void)
 /* 删除单条逻辑 */
 void del_logic(void)
 {
-    u8 i, j;
+    u8 i, j,
+       l_sum = logic_sum,
+       t_sum = time_sum;
 
-    for (i = 0; i < logic_sum; i++) {
+    for (i = 0; i < l_sum; i++) {
         if (logic_entry[i].logic_seq == rx_buf[12]) {
             memcpy(timestamp, rx_buf + 10, 2);
             //将被删除逻辑后面的所有逻辑前移，
@@ -300,7 +310,13 @@ void del_logic(void)
                 logic_entry[j].logic_seq--;
             memset(logic_entry + logic_sum, 0,
                    (MAX_LOGIC_SIZE - logic_sum) * sizeof(Logic));
-
+            //删除该逻辑对应的时间表项
+            for (i = 0; i < t_sum; i++) {
+                if (time_entry[i].logic_seq == rx_buf[12]) {
+                    del_time(i);
+                    break;
+                }
+            }
             //成功删除响应
             set_header(0x00, 0x05, 0x09, 0x00);
             set_tail(12);

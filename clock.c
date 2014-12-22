@@ -212,10 +212,6 @@ void rx_handler(void)
                 break;
         }
     }
-    //no need to do this for switch
-    /*else if ((rx_buf[7] & 0x3F) == 0x05 && (rx_buf[8] & 0xBF) == 0xBF) {
-        response_to_switch();
-    }*/
     rx_rst();
 }
 
@@ -237,7 +233,7 @@ __interrupt void uart0_tx_isr(void)
     }
 }
 
-/* 定时器1溢出中断 */
+/* 定时器1中断 */
 #pragma vector=TIMER1_OVF_vect
 __interrupt void t1_ovf_isr(void)
 {
@@ -323,7 +319,7 @@ void delay_10ms(void)
   for (i = 0; i < 11400; i++);
 }
 
-/**
+/*
  * 遍历时间表
  * 若时间匹配，则将对应逻辑的条件1置为真
  * 并计算该逻辑的下一次触发时间，加入时间表
@@ -350,7 +346,7 @@ void time_loop(void)
     }
 }
 
-/**
+/*
  * 遍历逻辑表
  * 若逻辑未开启，重置逻辑内的时间条件为0
  * 若逻辑触发，发送指令给继电器，并将时间条件重置为0

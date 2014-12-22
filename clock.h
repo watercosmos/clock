@@ -114,7 +114,7 @@ typedef struct
     u8 id;          //场景号/序列号
 } Func_Para;
 
-/* 32 byte */
+/* 32 + 1 byte */
 typedef struct
 {
     u8 enable:1;             //逻辑使能
