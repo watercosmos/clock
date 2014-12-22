@@ -16,29 +16,6 @@ void calc_crc(u8 buf)
     }
 }
 
-/*
-void exclude_unenable_condition(u8 i)
-{
-    switch (i) {
-        case 0:
-        case 2:
-            logic_entry[i].cond1_bool = 1;
-            logic_entry[i].cond2_bool = 1;
-            logic_entry[i].cond3_bool = 1;
-            logic_entry[i].cond4_bool = 1;
-            break;
-        case 1:
-        case 3:
-            logic_entry[i].cond1_bool = 0;
-            logic_entry[i].cond2_bool = 0;
-            logic_entry[i].cond3_bool = 0;
-            logic_entry[i].cond4_bool = 0;
-            break;
-        default:
-            break;
-    }
-}*/
-
 /**
  * 重置逻辑i的所有条件
  */
@@ -337,10 +314,13 @@ void del_logic(void)
 
 void tx_to_switch(const Logic *le)
 {
+    u8 tem = le->func_type;
+    if (tem)
+        tem++;
     set_header(0x03, 0x03, 0xBE, 0x00);
     tx_buf[2]  = le->func_para.dev_id;
     tx_buf[3]  = le->func_para.net_id;
-    tx_buf[12] = le->func_type << 4 | 0x01;
+    tx_buf[12] = tem << 4 | 0x01;
     tx_buf[13] = le->func_para.area_id;
     tx_buf[14] = le->func_para.id;
     set_tail(15);

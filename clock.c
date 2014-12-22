@@ -380,16 +380,16 @@ void logic_loop(void)
                 break;
             case 2:            //逻辑与非
                 if (!(logic_entry[i].cond1_bool &&
-                    logic_entry[i].cond2_bool &&
-                    logic_entry[i].cond3_bool &&
-                    logic_entry[i].cond4_bool))
+                      logic_entry[i].cond2_bool &&
+                      logic_entry[i].cond3_bool &&
+                      logic_entry[i].cond4_bool))
                     enable = 1;
                 break;
             case 3:            //逻辑或非
                 if (!(logic_entry[i].cond1_bool ||
-                    logic_entry[i].cond2_bool ||
-                    logic_entry[i].cond3_bool ||
-                    logic_entry[i].cond4_bool))
+                      logic_entry[i].cond2_bool ||
+                      logic_entry[i].cond3_bool ||
+                      logic_entry[i].cond4_bool))
                     enable = 1;
             default:
                 break;

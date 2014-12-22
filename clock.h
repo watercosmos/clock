@@ -92,8 +92,8 @@ typedef struct
     u8   end_date[4];         //结束日期
     u8   loop_num;            //循环次数          无效
     u8   day_in_week;         //周中哪天          最低位为周一
-    u8   day_in_month:5;      //月中哪天
     u8   week_in_month:3;     //月中哪周
+    u8   day_in_month:5;      //月中哪天
 } Time_Condition;
 
 /* 5 byte */

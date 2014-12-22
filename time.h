@@ -115,16 +115,10 @@ u8 which_week(u8 y, u8 m, u8 d)
 /* 由年、月、周数、周中哪天计算实际日期，返回日期 */
 u8 calc_date(u8 y, u8 m, u8 w, u8 day_in_week)
 {
-    u8 num = 0;
     u8 firstday_in_month = calc_weekday(y, m, 1);
     u8 firstday_in_week = 7 * w - firstday_in_month - 6;
 
-    while (!(day_in_week & 0x01)) {
-        day_in_week >>= 1;
-        num++;
-    }
-
-    return firstday_in_week + num;
+    return firstday_in_week + day_in_week - 1;
 }
 
 /* 删除单条时间表项 */
@@ -134,13 +128,12 @@ void del_time(u8 i)
             (time_sum - i - 1) * sizeof(Time_Entry));
     time_sum--;
     memset(time_entry + time_sum, 0,
-           (MAX_TIME_SIZE - time_sum) * sizeof(Time_Entry));
+           (MAX_TIME_SIZE - time_sum) * sizeof(Time_Entry));  //好像没必要
 }
 
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
 void calc_time(const Time_Condition * tc, u8 ls)
 {
-    u8 num = 0, diw = tc->day_in_week;    //避免修改原值
     Time t, t_dec;
 
     //时间表已满，舍弃
@@ -148,7 +141,7 @@ void calc_time(const Time_Condition * tc, u8 ls)
         return;
 
     memcpy(&t, &(tc->start_time), sizeof(Time));
-    I2CReadDate(&now);
+    I2CReadDate(&now);    //有必要吗?
 
     //若当前时间早于开始时间，则将开始时间加入时间表
     if (time_cmp(&now, &t) < 0) {
@@ -182,11 +175,7 @@ void calc_time(const Time_Condition * tc, u8 ls)
                 fix_date(&t_dec);
                 t_dec.day -= calc_weekday(t_dec.year, t_dec.month, t_dec.day);
                 //这里没考虑周内多天
-                while (!(diw & 0x01)) {
-                    diw >>= 1;
-                    num++;
-                }
-                t_dec.day += num;
+                t_dec.day += tc->day_in_week - 1;
                 fix_date(&t_dec);
                 dec_to_hex(&t_dec, &t);
             }
