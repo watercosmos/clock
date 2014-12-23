@@ -238,7 +238,7 @@ void I2CReadDate(Time *times)
     times->second = date[0];
     times->minute = date[1];
     times->hour = date[2] & 0x7F;
-    times->week = which_week(date[6], date[5], date[4]);
+    times->week = date[3]);    //这里读出的是周几
     times->day = date[4];
     times->month = date[5];
     times->year = date[6];
@@ -249,7 +249,7 @@ void I2CReadDate(Time *times)
 
 
 /******写SD2400实时数据寄存器******/
-void I2CWriteDate(Time *times)
+void I2CWriteDate(Time *times, u8 week)
 {        
 
         WriteTimeOn();
@@ -266,7 +266,7 @@ void I2CWriteDate(Time *times)
     I2CSendByte(times->hour | 0x80);        //hour ,二十四小时制     
     I2CWaitAck();
     //week，星期几
-    I2CSendByte(calc_weekday(times->year, times->month, times->day));
+    I2CSendByte(week);
     I2CWaitAck();
     I2CSendByte(times->day);        //day      
     I2CWaitAck();

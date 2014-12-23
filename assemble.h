@@ -138,9 +138,15 @@ void set_enable(void)
 /* 校准时间 */
 void set_time(void)
 {
+    u8 week;
+    Time t_dec;
+
+    hex_to_dec(&now, &t_dec);
+    week = calc_weekday(t_dec.year, t_dec.month, t_dec.day)
+    
     memcpy(timestamp, rx_buf + 10, 2);
     memcpy(&now, rx_buf + 12, 7);
-    I2CWriteDate(&now);
+    I2CWriteDate(&now, week);
     set_header(0x00, 0x05, 0x00, 0x00);
     set_tail(12);
 
@@ -220,7 +226,7 @@ void set_logic(void)
     reset_condition(current);
 
     //若修改逻辑，则删除原逻辑的时间表项，否则增加逻辑总数
-    if (current != logic_sum) {
+    if (current != logic_sum)
         for (i = 0; i < t_sum; i++) {
             if (time_entry[i].logic_seq == logic_entry[current].logic_seq) {
                 del_time(i);

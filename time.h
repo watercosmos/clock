@@ -139,6 +139,7 @@ void del_time(u8 i)
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
 void calc_time(const Time_Condition * tc, u8 ls)
 {
+    u8 num = 0, diw = tc->day_in_week;    //避免修改原值
     Time t, t_dec;
 
     //时间表已满，舍弃
