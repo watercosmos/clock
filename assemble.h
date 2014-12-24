@@ -142,7 +142,7 @@ void set_time(void)
     Time t_dec;
 
     hex_to_dec(&now, &t_dec);
-    week = calc_weekday(t_dec.year, t_dec.month, t_dec.day)
+    week = calc_weekday(t_dec.year, t_dec.month, t_dec.day);
     
     memcpy(timestamp, rx_buf + 10, 2);
     memcpy(&now, rx_buf + 12, 7);
@@ -348,6 +348,16 @@ void tx_to_switch(const Logic *le)
     set_tail(15);
 
     tx_num = 17;
+    TOTX   = 1;
+}
+
+void tx_to_ctrl(u8 ls)
+{
+    set_header(0x01, 0x05, 0x85, 0x00);
+    tx_buf[12] = ls;
+    set_tail(13);
+    
+    tx_num = 15;
     TOTX   = 1;
 }
 

@@ -91,6 +91,10 @@ void fix_date(Time *t)
 u8 calc_weekday(int y, u8 m, u8 d)
 {
     u8 w;
+    
+    n1 = y;
+    n2 = m;
+    n3 = d;
 
     y = y + 2000;
     if (m == 1 || m == 2) {
@@ -114,16 +118,26 @@ u8 which_week(u8 y, u8 m, u8 d)
 /* 由年、月、周数、周中哪天计算实际日期，返回日期 */
 u8 calc_date(u8 y, u8 m, u8 w, u8 day_in_week)
 {
-    u8 num = 0;
     u8 firstday_in_month = calc_weekday(y, m, 1);
     u8 firstday_in_week  = 7 * w - firstday_in_month - 6;
+    
+    m1 = y;
+    m2 = m;
+    m3 = w;
+    m4 = day_in_week;
 
+    tem = 0;
     while (!(day_in_week & 0x01)) {
         day_in_week >>= 1;
-        num++;
+        tem++;
     }
+    
+    log1 = firstday_in_month;
+    log2 = firstday_in_week;
+    log3 = day_in_week;
+    log4 = tem;
 
-    return firstday_in_week + num;
+    return firstday_in_week + tem;
 }
 
 /* 删除单条时间表项 */
@@ -139,7 +153,7 @@ void del_time(u8 i)
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
 void calc_time(const Time_Condition * tc, u8 ls)
 {
-    u8 num = 0, diw = tc->day_in_week;    //避免修改原值
+    u8 diw = tc->day_in_week;    //避免修改原值
     Time t, t_dec;
 
     //时间表已满，舍弃
@@ -181,11 +195,12 @@ void calc_time(const Time_Condition * tc, u8 ls)
                 fix_date(&t_dec);
                 t_dec.day -= calc_weekday(t_dec.year, t_dec.month, t_dec.day);
                 //这里没考虑周内多天
+                tem = 0;
                 while (!(diw & 0x01)) {
                     diw >>= 1;
-                    num++;
+                    tem++;
                 }
-                t_dec.day += num;
+                t_dec.day += tem;
                 fix_date(&t_dec);
                 dec_to_hex(&t_dec, &t);
             }

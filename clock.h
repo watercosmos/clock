@@ -157,5 +157,11 @@ u8 time_sum;
 
 const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 u8 timer;
+u8 tem;
+u8 timer2;
+u8 ls_to_ctrl;
+u8 TX_CTRL;
+
+int m1,m2,m3,m4,n1,n2,n3,log1,log2,log3,log4,log5;
 
 #endif

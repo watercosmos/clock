@@ -251,6 +251,11 @@ __interrupt void t1_ovf_isr(void)
 __interrupt void t0_ovf_isr(void)
 {
     timer++;
+    
+    if (TX_CTRL == 1 && timer == timer2) {
+        tx_to_ctrl(ls_to_ctrl);
+        TX_CTRL = 0;
+    }
 
     if (timer < 25)     //600 ms
         return;
@@ -395,6 +400,12 @@ void logic_loop(void)
             tx_to_switch(&(logic_entry[i]));
             reset_condition(i);
             enable = 0;
+            TX_CTRL = 1;
+            ls_to_ctrl = logic_entry[i].logic_seq;
+            if (timer < 23)
+                timer2 = timer + 3;
+            else
+                timer2 = 3;
         }
     }
 }

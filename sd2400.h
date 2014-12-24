@@ -238,7 +238,7 @@ void I2CReadDate(Time *times)
     times->second = date[0];
     times->minute = date[1];
     times->hour = date[2] & 0x7F;
-    times->week = date[3]);    //这里读出的是周几
+    times->week = date[3];    //这里读出的是周几
     times->day = date[4];
     times->month = date[5];
     times->year = date[6];
