@@ -207,7 +207,7 @@ void rx_handler(void)
             default:
                 break;
         }
-    } else if (WAIT_SENSOR)
+    } else if (WAIT_SENSOR && ls_for_cond2 != 0xFF)
         check_sensor();
     rx_rst();
     memset(rx_buf, 0, MAX_RX_BUF_SIZE);
@@ -231,6 +231,22 @@ __interrupt void uart0_tx_isr(void)
     }
 }
 
+/* 定时器2中断 */
+#pragma vector=TIMER2_OVF_vect
+__interrupt void t2_ovf_isr(void)
+{
+    timer2++;
+
+    if (timer2 < 40)     //0.95 s
+        return;
+
+    timer2 = 0;
+    TCCR2  = 0x00;
+    WAIT_SENSOR = 0;
+    reset_condition(ls_for_cond2);
+    ls_for_cond2 = 0xFF;
+}
+
 /* 定时器1中断 */
 #pragma vector=TIMER1_OVF_vect
 __interrupt void t1_ovf_isr(void)
@@ -248,17 +264,12 @@ __interrupt void t1_ovf_isr(void)
 #pragma vector=TIMER0_OVF_vect
 __interrupt void t0_ovf_isr(void)
 {
-    timer++;
-    /*
-    if (TX_CTRL == 1 && timer == timer2) {
-        tx_to_ctrl(ls_to_ctrl);
-        TX_CTRL = 0;
-    }*/
+    timer0++;
 
-    if (timer < 25)     //600 ms
+    if (timer0 < 25)     //600 ms
         return;
 
-    timer = 0;
+    timer0 = 0;
     I2CReadDate(&now);
 }
 
@@ -286,18 +297,18 @@ void sys_init(void)
     /* 定时器0 23.7ms */
     TCCR0  = 0x00;        //停止定时器
     TCNT0  = 0x53;        //初始值
-    OCR0   = 0x52;        //匹配值 无效，这里是溢出中断
+    OCR0   = 0x52;
     TIMSK |= 0x01;        //溢出中断使能
     TIFR  |= 0x01;        //溢出标志
     TCCR0  = 0x07;        //启动定时器，1024分频
 
+    /* 定时器2 23.7ms */
     TCCR2  = 0x00;
     TCNT2  = 0x53;
     OCR2   = 0x52;
     TIMSK |= 0x40;        //溢出中断使能
     TIFR  |= 0x40;        //溢出标志
-    TCCR2  = 0x05;        //启动定时器，1024分频
-    TCCR2  = 0x00;
+    //TCCR2  = 0x05;        //启动定时器，1024分频
 
     TIMSK &= 0x7F;
 }
@@ -354,7 +365,8 @@ void time_loop(void)
                         start_tx();
                         TOTX = 0;
                     }
-                    //这里启动一个1s的定时器, 到时后WAIT_SENSOR置0
+                    //启动定时器2, 到时后WAIT_SENSOR置0
+                    TCCR2  = 0x05;
                     WAIT_SENSOR = 1;
                     ls_for_cond2 = j;
                     delay_10ms();
@@ -369,6 +381,7 @@ void time_loop(void)
 
 void check_sensor(void)
 {
+    TCCR2  = 0x00;
     switch (logic_entry[ls_for_cond2].cond2.type) {
         case 0:
             if (logic_entry[ls_for_cond2].cond2.para1 == rx_buf[10])
@@ -382,6 +395,7 @@ void check_sensor(void)
             break;
     }
     WAIT_SENSOR = 0;
+    ls_for_cond2 = 0xFF;
 }
 
 /*

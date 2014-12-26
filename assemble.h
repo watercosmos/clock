@@ -378,10 +378,9 @@ void tx_to_sensor(Sensor_Condition *sc)
     set_header(0x01, 0x06, 0x8A);
     tx_buf[2] = sc->dev_id;
     tx_buf[3] = sc->net_id;
-    tx_buf[12] = sc->type;
-    set_tail(13);
+    set_tail(12);
 
-    tx_num = 15;
+    tx_num = 14;
     TOTX   = 1;
 }
 
