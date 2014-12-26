@@ -31,7 +31,7 @@ void reset_condition(u8 i)
         logic_entry[i].cond4_bool = 0;
 }
 
-void set_header(u8 len, u8 order1, u8 order2, u8 result)
+void set_header(u8 len, u8 order1, u8 order2)
 {
     tx_buf[0]  = 0xAA;
     tx_buf[1]  = 0xAA;
@@ -44,7 +44,7 @@ void set_header(u8 len, u8 order1, u8 order2, u8 result)
     tx_buf[8]  = 0x00;          //分组序号
     tx_buf[9]  = order1;        //分组优先级、命令大类
     tx_buf[10] = order2;        //命令/响应、命令小类
-    tx_buf[11] = result;        //命令结果
+    tx_buf[11] = 0x00;        //命令结果
 }
 
 void set_tail(u8 len)
@@ -61,7 +61,7 @@ void set_tail(u8 len)
 /* 响应查询是否在线命令 */
 void tx_status(void)
 {
-    set_header(0x0A, 0x00, 0x00, 0x00);
+    set_header(0x0A, 0x00, 0x00);
     memcpy(tx_buf + 12, MAC, 8);
     memcpy(tx_buf + 20, timestamp, 2);
     set_tail(22);
@@ -77,7 +77,7 @@ void set_abstract(void)
     memcpy(dev_models, rx_buf + 12, 12);
     enable = rx_buf[24];
 
-    set_header(0x00, 0x00, 0x01, 0x00);
+    set_header(0x00, 0x00, 0x01);
     set_tail(12);
 
     tx_num = 14;
@@ -87,7 +87,7 @@ void set_abstract(void)
 /* 发送摘要信息 */
 void tx_abstract(void)
 {
-    set_header(0x1F, 0x00, 0x02, 0x00);
+    set_header(0x1F, 0x00, 0x02);
     memcpy(tx_buf + 12, dev_models, 12);
     tx_buf[24] = enable;
     memcpy(tx_buf + 25, MAC, 8);
@@ -101,7 +101,7 @@ void tx_abstract(void)
 /* 汇报MAC */
 void tx_mac(void)
 {
-    set_header(0x08, 0x00, 0x03, 0x00);
+    set_header(0x08, 0x00, 0x03);
     memcpy(tx_buf + 12, MAC, 8);
     set_tail(20);
 
@@ -116,7 +116,7 @@ void set_id(void)
     dev_id = rx_buf[20];
     net_id = rx_buf[21];
 
-    set_header(0x00, 0x00, 0x04, 0x00);
+    set_header(0x00, 0x00, 0x04);
     set_tail(12);
 
     tx_num = 14;
@@ -128,7 +128,7 @@ void set_enable(void)
 {
     memcpy(timestamp, rx_buf + 10, 2);
     enable = rx_buf[12];
-    set_header(0x00, 0x00, 0x05, 0x00);
+    set_header(0x00, 0x00, 0x05);
     set_tail(12);
 
     tx_num = 14;
@@ -147,7 +147,7 @@ void set_time(void)
     memcpy(timestamp, rx_buf + 10, 2);
     memcpy(&now, rx_buf + 12, 7);
     I2CWriteDate(&now, week);
-    set_header(0x00, 0x05, 0x00, 0x00);
+    set_header(0x00, 0x05, 0x00);
     set_tail(12);
 
     tx_num = 14;
@@ -158,7 +158,7 @@ void set_time(void)
 void tx_time(void)
 {
     I2CReadDate(&now);
-    set_header(0x07, 0x05, 0x01, 0x00);
+    set_header(0x07, 0x05, 0x01);
     memcpy(tx_buf + 12, &now, 7);
     set_tail(19);
 
@@ -169,7 +169,7 @@ void tx_time(void)
 /* 读取当前逻辑总数 */
 void tx_logic_sum(void)
 {
-    set_header(0x01, 0x05, 0x02, 0x00);
+    set_header(0x01, 0x05, 0x02);
     tx_buf[12] = logic_sum;
     set_tail(13);
 
@@ -199,7 +199,7 @@ void set_logic(void)
     memset(logic_entry + current, 0, sizeof(Logic));
     memcpy(logic_entry + current, rx_buf + 13, 32);
 
-    set_header(0x00, 0x05, 0x03, 0x00);
+    set_header(0x00, 0x05, 0x03);
     set_tail(12);
 
     tx_num = 14;
@@ -248,7 +248,7 @@ void tx_logic_entry(void)
 
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == rx_buf[10]) {
-            set_header(0x21, 0x05, 0x04, 0x00);
+            set_header(0x21, 0x05, 0x04);
             tx_buf[12] = logic_sum;
             memcpy(tx_buf + 13, logic_entry + i, 32);
             set_tail(45);
@@ -263,18 +263,30 @@ void tx_logic_entry(void)
 /* 启用/禁用单条逻辑 */
 void set_logic_enable(void)
 {
-    u8 i;
+    u8 i,
+       t_sum = time_sum;
     
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
             memcpy(timestamp, rx_buf + 10, 2);
             logic_entry[i].enable = rx_buf[13] & 0x01;
             reset_condition(i);
+            if (logic_entry[i].enable)
+                calc_time(&(logic_entry[i].cond1),
+                          logic_entry[i].logic_seq);
+            else
+                //删除该逻辑对应的时间表项
+                for (i = 0; i < t_sum; i++) {
+                    if (time_entry[i].logic_seq == rx_buf[12]) {
+                        del_time(i);
+                        break;
+                    }
+                }
             break;
         }
     }
 
-    set_header(0x00, 0x05, 0x07, 0x00);
+    set_header(0x00, 0x05, 0x07);
     set_tail(12);
 
     tx_num = 14;
@@ -290,7 +302,7 @@ void clear_logic(void)
     memset(time_entry, 0, MAX_TIME_SIZE * sizeof(Time_Entry));
     memcpy(timestamp, rx_buf + 10, 2);
 
-    set_header(0x00, 0x05, 0x08, 0x00);
+    set_header(0x00, 0x05, 0x08);
     set_tail(12);
 
     tx_num = 14;
@@ -324,7 +336,7 @@ void del_logic(void)
                 }
             }
             //成功删除响应
-            set_header(0x00, 0x05, 0x09, 0x00);
+            set_header(0x00, 0x05, 0x09);
             set_tail(12);
 
             tx_num = 14;
@@ -339,7 +351,7 @@ void tx_to_switch(const Logic *le)
     u8 tem = le->func_type;
     if (tem)
         tem++;
-    set_header(0x03, 0x03, 0xBE, 0x00);
+    set_header(0x03, 0x03, 0xBE);
     tx_buf[2]  = le->func_para.dev_id;
     tx_buf[3]  = le->func_para.net_id;
     tx_buf[12] = tem << 4 | 0x01;
@@ -353,10 +365,22 @@ void tx_to_switch(const Logic *le)
 
 void tx_to_ctrl(u8 ls)
 {
-    set_header(0x01, 0x05, 0x85, 0x00);
+    set_header(0x01, 0x05, 0x85);
     tx_buf[12] = ls;
     set_tail(13);
     
+    tx_num = 15;
+    TOTX   = 1;
+}
+
+void tx_to_sensor(Sensor_Condition *sc)
+{
+    set_header(0x01, 0x06, 0x8A);
+    tx_buf[2] = sc->dev_id;
+    tx_buf[3] = sc->net_id;
+    tx_buf[12] = sc->type;
+    set_tail(13);
+
     tx_num = 15;
     TOTX   = 1;
 }

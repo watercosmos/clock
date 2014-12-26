@@ -14,6 +14,7 @@ void crc_check(void);
 void rx_handler(void);
 void delay_10ms(void);
 void time_loop(void);
+void check_sensor(void);
 void logic_loop(void);
 
 void main(void)
@@ -206,8 +207,10 @@ void rx_handler(void)
             default:
                 break;
         }
-    }
+    } else if (WAIT_SENSOR)
+        check_sensor();
     rx_rst();
+    memset(rx_buf, 0, MAX_RX_BUF_SIZE);
 }
 
 /* 发送中断 */
@@ -246,11 +249,11 @@ __interrupt void t1_ovf_isr(void)
 __interrupt void t0_ovf_isr(void)
 {
     timer++;
-    
+    /*
     if (TX_CTRL == 1 && timer == timer2) {
         tx_to_ctrl(ls_to_ctrl);
         TX_CTRL = 0;
-    }
+    }*/
 
     if (timer < 25)     //600 ms
         return;
@@ -284,13 +287,19 @@ void sys_init(void)
     TCCR0  = 0x00;        //停止定时器
     TCNT0  = 0x53;        //初始值
     OCR0   = 0x52;        //匹配值 无效，这里是溢出中断
-    TIMSK |= 0x01;        ///中断允许
-    TIFR  |= 0x01;
+    TIMSK |= 0x01;        //溢出中断使能
+    TIFR  |= 0x01;        //溢出标志
     TCCR0  = 0x07;        //启动定时器，1024分频
 
-    TCCR2  = 0x00;        //停止定时器
+    TCCR2  = 0x00;
+    TCNT2  = 0x53;
+    OCR2   = 0x52;
+    TIMSK |= 0x40;        //溢出中断使能
+    TIFR  |= 0x40;        //溢出标志
+    TCCR2  = 0x05;        //启动定时器，1024分频
+    TCCR2  = 0x00;
 
-    TIMSK &= 0x3F;
+    TIMSK &= 0x7F;
 }
 
 /* 开始发送 */
@@ -339,11 +348,40 @@ void time_loop(void)
                 logic_entry[j].cond1_bool = 1;
                 calc_time(&(logic_entry[j].cond1),
                           logic_entry[j].logic_seq);
+                if (logic_entry[j].cond2_enable) {
+                    tx_to_sensor(&(logic_entry[j].cond2));
+                    if (TOTX && !BUSY) {
+                        start_tx();
+                        TOTX = 0;
+                    }
+                    //这里启动一个1s的定时器, 到时后WAIT_SENSOR置0
+                    WAIT_SENSOR = 1;
+                    ls_for_cond2 = j;
+                    delay_10ms();
+                }
+                break;
             }
         }
         del_time(i);
         break;
     }
+}
+
+void check_sensor(void)
+{
+    switch (logic_entry[ls_for_cond2].cond2.type) {
+        case 0:
+            if (logic_entry[ls_for_cond2].cond2.para1 == rx_buf[10])
+                logic_entry[ls_for_cond2].cond2_bool = 1;
+            else
+                reset_condition(ls_for_cond2);
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+    }
+    WAIT_SENSOR = 0;
 }
 
 /*
@@ -353,7 +391,7 @@ void time_loop(void)
  */
 void logic_loop(void)
 {
-    u8 i, enable = 0;
+    u8 i, j, enable = 0;
 
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].enable == 0)
@@ -392,22 +430,30 @@ void logic_loop(void)
         }
 
         if (enable) {
-            tx_to_switch(&(logic_entry[i]));
-            reset_condition(i);
             enable = 0;
+            reset_condition(i);
 
+            tx_to_switch(&(logic_entry[i]));
             if (TOTX && !BUSY) {
                 start_tx();
                 TOTX = 0;
             }
-
+            for (j = 0; j < 3; j++)
+                delay_10ms();
+            tx_to_ctrl(logic_entry[i].logic_seq);
+            if (TOTX && !BUSY) {
+                start_tx();
+                TOTX = 0;
+            }
+            delay_10ms();
+/*
             TX_CTRL = 1;
             ls_to_ctrl = logic_entry[i].logic_seq;
             //间隔三次以上定时器0中断后发送激活逻辑帧, 60 < 间隔 < 100 ms
             if (timer < 23)
                 timer2 = timer + 3;
             else
-                timer2 = 2;
+                timer2 = 2;*/
         }
     }
 }

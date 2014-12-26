@@ -91,10 +91,6 @@ void fix_date(Time *t)
 u8 calc_weekday(int y, u8 m, u8 d)
 {
     u8 w;
-    
-    n1 = y;
-    n2 = m;
-    n3 = d;
 
     y = y + 2000;
     if (m == 1 || m == 2) {
@@ -124,18 +120,12 @@ u8 calc_date(u8 y, u8 m, u8 w, u8 day_in_week)
     m1 = y;
     m2 = m;
     m3 = w;
-    m4 = day_in_week;
 
     tem = 0;
     while (!(day_in_week & 0x01)) {
         day_in_week >>= 1;
         tem++;
     }
-    
-    log1 = firstday_in_month;
-    log2 = firstday_in_week;
-    log3 = day_in_week;
-    log4 = tem;
 
     return firstday_in_week + tem;
 }

@@ -64,6 +64,8 @@ u8 timestamp[2] = {0};
 u8 dev_models[12] = {0x63, 0x6C, 0x6F, 0x63, 0x6B, 0x00};
 u8 enable = 0x01;
 u8 IICSTOP;
+u8 WAIT_SENSOR;
+u8 ls_for_cond2 = 0xFF;
 
 const u8 MAC[8] = {0x00, 0x00, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6};
 u8 soft_version[10] = {0};
@@ -159,10 +161,10 @@ const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 u8 tem;          //计算星期的移位计数
 u8 timer;        //定时器0常规计数
-u8 timer2;       //定时器0激活逻辑组帧计数
-u8 ls_to_ctrl;   //激活逻辑号, 用于主循环内和中断内的参数传递
-u8 TX_CTRL;      //激活逻辑帧待发标识位
+//u8 timer2;       //定时器0激活逻辑组帧计数
+//u8 ls_to_ctrl;   //激活逻辑号, 用于主循环内和中断内的参数传递
+//u8 TX_CTRL;      //激活逻辑帧待发标识位
 
-int m1,m2,m3,m4,n1,n2,n3,log1,log2,log3,log4,log5;
+int m1,m2,m3,log5;    //无意义, 但必须
 
 #endif
