@@ -189,7 +189,7 @@ void set_logic(void)
 
     //遍历逻辑表，序号已存在则将修改逻辑
     for (i = 0; i < logic_sum; i++) {
-        if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
+        if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
             current = i;
             break;
         }
@@ -266,7 +266,7 @@ void set_logic_enable(void)
     u8 i;
     
     for (i = 0; i < logic_sum; i++) {
-        if (logic_entry[i].logic_seq == (rx_buf[13] >> 1)) {
+        if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
             memcpy(timestamp, rx_buf + 10, 2);
             logic_entry[i].enable = rx_buf[13] & 0x01;
             reset_condition(i);

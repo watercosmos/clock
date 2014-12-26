@@ -35,11 +35,6 @@ void main(void)
         time_loop();
         logic_loop();
 
-        if (TOTX && !BUSY) {
-            start_tx();
-            TOTX = 0;
-        }
-
         WDI = 0;
         delay_10ms();
         WDI = 1;
@@ -400,12 +395,19 @@ void logic_loop(void)
             tx_to_switch(&(logic_entry[i]));
             reset_condition(i);
             enable = 0;
+
+            if (TOTX && !BUSY) {
+                start_tx();
+                TOTX = 0;
+            }
+
             TX_CTRL = 1;
             ls_to_ctrl = logic_entry[i].logic_seq;
+            //间隔三次以上定时器0中断后发送激活逻辑帧, 60 < 间隔 < 100 ms
             if (timer < 23)
                 timer2 = timer + 3;
             else
-                timer2 = 3;
+                timer2 = 2;
         }
     }
 }

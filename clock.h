@@ -117,8 +117,8 @@ typedef struct
 /* 32 + 1 byte */
 typedef struct
 {
-    u8 enable:1;             //逻辑使能
     u8 logic_seq:7;          //逻辑号
+    u8 enable:1;             //逻辑使能
     u8 reserve:2;            //保留
     u8 logic_operator:2;     //逻辑运算：0-3对应与、或、与非、或非
     u8 cond4_enable:1;       //条件1-4启用/禁用
@@ -144,23 +144,24 @@ typedef struct
 /* 8 byte */
 typedef struct
 {
-    Time time;         //触发时间
-    u8 logic_seq;      //对应逻辑
+    Time time;      //触发时间
+    u8 logic_seq;   //对应逻辑
 } Time_Entry;
 
-Time now;
+Time now;           //当前时间
 
-Logic logic_entry[MAX_LOGIC_SIZE];
-Time_Entry time_entry[MAX_TIME_SIZE];
-u8 logic_sum;
-u8 time_sum;
+Logic logic_entry[MAX_LOGIC_SIZE];      //逻辑表
+Time_Entry time_entry[MAX_TIME_SIZE];   //时间表
+u8 logic_sum;                           //现存逻辑数
+u8 time_sum;                            //现存时间数
 
 const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-u8 timer;
-u8 tem;
-u8 timer2;
-u8 ls_to_ctrl;
-u8 TX_CTRL;
+
+u8 tem;          //计算星期的移位计数
+u8 timer;        //定时器0常规计数
+u8 timer2;       //定时器0激活逻辑组帧计数
+u8 ls_to_ctrl;   //激活逻辑号, 用于主循环内和中断内的参数传递
+u8 TX_CTRL;      //激活逻辑帧待发标识位
 
 int m1,m2,m3,m4,n1,n2,n3,log1,log2,log3,log4,log5;
 

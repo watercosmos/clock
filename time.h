@@ -229,7 +229,12 @@ void calc_time(const Time_Condition * tc, u8 ls)
             break;
     }
 
+    //判断循环是否结束
+    if (tc->loop_end_flag && date_cmp(&t, tc->end_date) >= 0)
+        return;
+
     memcpy(time_entry + time_sum, &t, sizeof(Time));
+    log5 = ls;
     time_entry[time_sum].logic_seq = ls;
     time_sum++;
 }
