@@ -5,8 +5,9 @@
 #include "assemble.h"
 
 volatile u8 filled;
-volatile unsigned int  length;
+volatile u16  length;
 
+void load_eeprom(void);
 void sys_init(void);
 void start_tx(void);
 void rx_rst(void);
@@ -47,7 +48,7 @@ void main(void)
 __interrupt void uart0_rx_isr(void)
 {
     u8 rx, rx_now;
-    unsigned int backoff;
+    u16 backoff;
 
     BUSY = 1;
 
@@ -207,7 +208,7 @@ void rx_handler(void)
             default:
                 break;
         }
-    } else if (WAIT_SENSOR && ls_for_cond2 != 0xFF &&
+    } else if (WAIT && ls_cond2 != 0xFF &&
                (rx_buf[7] & 0x3F) == 0x06 && rx_buf[8] == 0x0A)
         check_sensor();
     rx_rst();
@@ -243,9 +244,9 @@ __interrupt void t2_ovf_isr(void)
 
     timer2 = 0;
     TCCR2  = 0x00;
-    WAIT_SENSOR = 0;
-    reset_condition(ls_for_cond2);
-    ls_for_cond2 = 0xFF;
+    WAIT = 0;
+    reset_condition(ls_cond2);
+    ls_cond2 = 0xFF;
 }
 
 /* 定时器1中断 */
@@ -312,6 +313,8 @@ void sys_init(void)
     //TCCR2  = 0x05;        //启动定时器，1024分频
 
     TIMSK &= 0x7F;
+
+    load_eeprom();
 }
 
 /* 开始发送 */
@@ -336,7 +339,7 @@ void rx_rst(void)
 /* 1ms延时函数，用于踢狗 */
 void delay_10ms(void)
 {
-  unsigned int i;
+  u16 i;
   for (i = 0; i < 11400; i++);
 }
 
@@ -366,10 +369,10 @@ void time_loop(void)
                         start_tx();
                         TOTX = 0;
                     }
-                    //启动定时器2, 到时后WAIT_SENSOR置0
+                    //启动定时器2, 到时后WAIT置0
                     TCCR2  = 0x05;
-                    WAIT_SENSOR = 1;
-                    ls_for_cond2 = j;
+                    WAIT = 1;
+                    ls_cond2 = j;
                     delay_10ms();
                 }
                 break;
@@ -383,29 +386,29 @@ void time_loop(void)
 void check_sensor(void)
 {
     TCCR2  = 0x00;
-    switch (logic_entry[ls_for_cond2].cond2.type) {
+    switch (logic_entry[ls_cond2].cond2.type) {
         case 1:    //干节点1
         case 2:    //干节点2
             break;
         case 3:    //温度
-            if (rx_buf[13] > logic_entry[ls_for_cond2].cond2.para1 &&
-                rx_buf[13] < logic_entry[ls_for_cond2].cond2.para2)
-                logic_entry[ls_for_cond2].cond2_bool = 1;
+            if (rx_buf[13] > logic_entry[ls_cond2].cond2.para1 &&
+                rx_buf[13] < logic_entry[ls_cond2].cond2.para2)
+                logic_entry[ls_cond2].cond2_bool = 1;
             break;
         case 4:    //红外
-            if (rx_buf[10] == logic_entry[ls_for_cond2].cond2.para1)
-                logic_entry[ls_for_cond2].cond2_bool = 1;
+            if (rx_buf[10] == logic_entry[ls_cond2].cond2.para1)
+                logic_entry[ls_cond2].cond2_bool = 1;
             break;
         case 5:    //亮度
-            if (rx_buf[11] > logic_entry[ls_for_cond2].cond2.para1 &&
-                rx_buf[11] < logic_entry[ls_for_cond2].cond2.para2)
-                logic_entry[ls_for_cond2].cond2_bool = 1;
+            if (rx_buf[11] > logic_entry[ls_cond2].cond2.para1 &&
+                rx_buf[11] < logic_entry[ls_cond2].cond2.para2)
+                logic_entry[ls_cond2].cond2_bool = 1;
             break;
         default:
             break;
     }
-    WAIT_SENSOR = 0;
-    ls_for_cond2 = 0xFF;
+    WAIT = 0;
+    ls_cond2 = 0xFF;
     delay_10ms();
     delay_10ms();
     delay_10ms();
@@ -473,14 +476,18 @@ void logic_loop(void)
                 TOTX = 0;
             }
             delay_10ms();
-/*
-            TX_CTRL = 1;
-            ls_to_ctrl = logic_entry[i].logic_seq;
-            //间隔三次以上定时器0中断后发送激活逻辑帧, 60 < 间隔 < 100 ms
-            if (timer < 23)
-                timer2 = timer + 3;
-            else
-                timer2 = 2;*/
         }
+    }
+}
+
+void load_eeprom(void)
+{
+    u8 i, j;
+
+    for (i = 0; i < logic_sum; i++) {
+        for (j = 0; j < 32; j++)
+            __EEGET(*(eep_logic + j), LOGIC_ADDR + i * 32 + j);
+        memcpy(logic_entry + i, eep_logic, 32);
+        reset_condition(i);
     }
 }

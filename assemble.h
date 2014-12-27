@@ -63,7 +63,8 @@ void tx_status(void)
 {
     set_header(0x0A, 0x00, 0x00);
     memcpy(tx_buf + 12, MAC, 8);
-    memcpy(tx_buf + 20, timestamp, 2);
+    tx_buf[20] = timestamp[0];
+    tx_buf[21] = timestamp[1];
     set_tail(22);
 
     tx_num = 24;
@@ -73,8 +74,12 @@ void tx_status(void)
 /* 设置摘要信息并响应 */
 void set_abstract(void)
 {
-    memcpy(timestamp, rx_buf + 10, 2);
-    memcpy(dev_models, rx_buf + 12, 12);
+    u8 i;
+
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
+    for (i = 0; i < 12; i++)
+        dev_models[i] = rx_buf[12 + i];
     enable = rx_buf[24];
 
     set_header(0x00, 0x00, 0x01);
@@ -87,11 +92,15 @@ void set_abstract(void)
 /* 发送摘要信息 */
 void tx_abstract(void)
 {
+    u8 i;
+
     set_header(0x1F, 0x00, 0x02);
-    memcpy(tx_buf + 12, dev_models, 12);
+    for (i = 0; i < 12; i++)
+        tx_buf[12 + i] = dev_models[i];
     tx_buf[24] = enable;
     memcpy(tx_buf + 25, MAC, 8);
-    memcpy(tx_buf + 33, soft_version, 10);
+    for (i = 0; i < 10; i++)
+        tx_buf[33 + i] = soft_version[i];
     set_tail(43);
 
     tx_num = 45;
@@ -112,7 +121,8 @@ void tx_mac(void)
 /* 配置新的设备、子网ID并响应 */
 void set_id(void)
 {
-    memcpy(timestamp, rx_buf + 10, 2);
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
     dev_id = rx_buf[20];
     net_id = rx_buf[21];
 
@@ -126,7 +136,8 @@ void set_id(void)
 /* 启用/禁用模块 */
 void set_enable(void)
 {
-    memcpy(timestamp, rx_buf + 10, 2);
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
     enable = rx_buf[12];
     set_header(0x00, 0x00, 0x05);
     set_tail(12);
@@ -144,7 +155,8 @@ void set_time(void)
     hex_to_dec(&now, &t_dec);
     week = calc_weekday(t_dec.year, t_dec.month, t_dec.day);
     
-    memcpy(timestamp, rx_buf + 10, 2);
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
     memcpy(&now, rx_buf + 12, 7);
     I2CWriteDate(&now, week);
     set_header(0x00, 0x05, 0x00);
@@ -195,9 +207,14 @@ void set_logic(void)
         }
     }
 
-    memcpy(timestamp, rx_buf + 10, 2);
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
     memset(logic_entry + current, 0, sizeof(Logic));
     memcpy(logic_entry + current, rx_buf + 13, 32);
+
+    addr = LOGIC_ADDR + current * 32;
+    for (i = 0; i < 32; i++)
+        __EEPUT(addr + i, *(rx_buf + 13 + i));
 
     set_header(0x00, 0x05, 0x03);
     set_tail(12);
@@ -211,15 +228,15 @@ void set_logic(void)
      */
      if (logic_entry[current].logic_operator == 0 ||
          logic_entry[current].logic_operator == 2) {
-        logic_entry[i].cond1_bool = 1;
-        logic_entry[i].cond2_bool = 1;
-        logic_entry[i].cond3_bool = 1;
-        logic_entry[i].cond4_bool = 1;
+        logic_entry[current].cond1_bool = 1;
+        logic_entry[current].cond2_bool = 1;
+        logic_entry[current].cond3_bool = 1;
+        logic_entry[current].cond4_bool = 1;
      } else {
-        logic_entry[i].cond1_bool = 0;
-        logic_entry[i].cond2_bool = 0;
-        logic_entry[i].cond3_bool = 0;
-        logic_entry[i].cond4_bool = 0;
+        logic_entry[current].cond1_bool = 0;
+        logic_entry[current].cond2_bool = 0;
+        logic_entry[current].cond3_bool = 0;
+        logic_entry[current].cond4_bool = 0;
      }
 
     //确定逻辑需使用哪些条件
@@ -268,7 +285,8 @@ void set_logic_enable(void)
     
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
-            memcpy(timestamp, rx_buf + 10, 2);
+            timestamp[0] = rx_buf[10];
+            timestamp[1] = rx_buf[11];
             logic_entry[i].enable = rx_buf[13] & 0x01;
             reset_condition(i);
             if (logic_entry[i].enable)
@@ -300,7 +318,8 @@ void clear_logic(void)
     time_sum  = 0;
     memset(logic_entry, 0, MAX_LOGIC_SIZE * sizeof(Logic));
     memset(time_entry, 0, MAX_TIME_SIZE * sizeof(Time_Entry));
-    memcpy(timestamp, rx_buf + 10, 2);
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
 
     set_header(0x00, 0x05, 0x08);
     set_tail(12);
@@ -318,7 +337,8 @@ void del_logic(void)
 
     for (i = 0; i < l_sum; i++) {
         if (logic_entry[i].logic_seq == rx_buf[12]) {
-            memcpy(timestamp, rx_buf + 10, 2);
+            timestamp[0] = rx_buf[10];
+            timestamp[1] = rx_buf[11];
             //将被删除逻辑后面的所有逻辑前移，
             memmove(logic_entry + i, logic_entry + i + 1,
                     (logic_sum - i - 1) * sizeof(Logic));
