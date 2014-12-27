@@ -375,7 +375,7 @@ void tx_to_ctrl(u8 ls)
 
 void tx_to_sensor(Sensor_Condition *sc)
 {
-    set_header(0x01, 0x06, 0x8A);
+    set_header(0x00, 0x06, 0x8A);
     tx_buf[2] = sc->dev_id;
     tx_buf[3] = sc->net_id;
     set_tail(12);

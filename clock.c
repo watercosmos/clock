@@ -207,7 +207,8 @@ void rx_handler(void)
             default:
                 break;
         }
-    } else if (WAIT_SENSOR && ls_for_cond2 != 0xFF)
+    } else if (WAIT_SENSOR && ls_for_cond2 != 0xFF &&
+               (rx_buf[7] & 0x3F) == 0x06 && rx_buf[8] == 0x0A)
         check_sensor();
     rx_rst();
     memset(rx_buf, 0, MAX_RX_BUF_SIZE);
@@ -383,19 +384,31 @@ void check_sensor(void)
 {
     TCCR2  = 0x00;
     switch (logic_entry[ls_for_cond2].cond2.type) {
-        case 0:
-            if (logic_entry[ls_for_cond2].cond2.para1 == rx_buf[10])
+        case 1:    //干节点1
+        case 2:    //干节点2
+            break;
+        case 3:    //温度
+            if (rx_buf[13] > logic_entry[ls_for_cond2].cond2.para1 &&
+                rx_buf[13] < logic_entry[ls_for_cond2].cond2.para2)
                 logic_entry[ls_for_cond2].cond2_bool = 1;
-            else
-                reset_condition(ls_for_cond2);
             break;
-        case 1:
+        case 4:    //红外
+            if (rx_buf[10] == logic_entry[ls_for_cond2].cond2.para1)
+                logic_entry[ls_for_cond2].cond2_bool = 1;
             break;
-        case 2:
+        case 5:    //亮度
+            if (rx_buf[11] > logic_entry[ls_for_cond2].cond2.para1 &&
+                rx_buf[11] < logic_entry[ls_for_cond2].cond2.para2)
+                logic_entry[ls_for_cond2].cond2_bool = 1;
+            break;
+        default:
             break;
     }
     WAIT_SENSOR = 0;
     ls_for_cond2 = 0xFF;
+    delay_10ms();
+    delay_10ms();
+    delay_10ms();
 }
 
 /*

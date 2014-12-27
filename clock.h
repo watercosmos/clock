@@ -103,8 +103,8 @@ typedef struct {
     u8 net_id;      //传感器子网ID
     u8 dev_id;      //传感器设备ID
     u8 type;        //传感器类型
-    u8 para1;       //参数1
-    u8 para2;       //参数2
+    u8 para1;       //参数1, 最小值
+    u8 para2;       //参数2, 最大值
 } Sensor_Condition;
 
 /* 4 byte */
