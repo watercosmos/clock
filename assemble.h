@@ -212,9 +212,8 @@ void set_logic(void)
     memset(logic_entry + current, 0, sizeof(Logic));
     memcpy(logic_entry + current, rx_buf + 13, 32);
 
-    addr = LOGIC_ADDR + current * 32;
     for (i = 0; i < 32; i++)
-        __EEPUT(addr + i, *(rx_buf + 13 + i));
+        __EEPUT(LOGIC_ADDR + current * 32 + i, *(rx_buf + 13 + i));
 
     set_header(0x00, 0x05, 0x03);
     set_tail(12);
@@ -287,7 +286,8 @@ void set_logic_enable(void)
         if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
             timestamp[0] = rx_buf[10];
             timestamp[1] = rx_buf[11];
-            logic_entry[i].enable = rx_buf[13] & 0x01;
+            logic_entry[i].enable = (rx_buf[13] & 0x80) >> 7;
+            __EEPUT(LOGIC_ADDR + i * 32, rx_buf[13]);
             reset_condition(i);
             if (logic_entry[i].enable)
                 calc_time(&(logic_entry[i].cond1),
@@ -331,7 +331,7 @@ void clear_logic(void)
 /* 删除单条逻辑 */
 void del_logic(void)
 {
-    u8 i, j,
+    u8 i, j, k,
        l_sum = logic_sum,
        t_sum = time_sum;
 
@@ -343,11 +343,13 @@ void del_logic(void)
             memmove(logic_entry + i, logic_entry + i + 1,
                     (logic_sum - i - 1) * sizeof(Logic));
             logic_sum--;
-            //同时其后的所有逻辑号减1以使逻辑号连续
-            for (j = i; j < logic_sum; j++)
+            //其后的所有逻辑号减1以使逻辑号连续
+            for (j = i; j < logic_sum; j++) {
                 logic_entry[j].logic_seq--;
-            memset(logic_entry + logic_sum, 0,
-                   (MAX_LOGIC_SIZE - logic_sum) * sizeof(Logic));
+                memcpy(eep_logic, logic_entry + j, 32);
+                for (k = 0; k < 32; k++)
+                    __EEPUT(LOGIC_ADDR + j * 32, eep_logic[k]);
+            }
             //删除该逻辑对应的时间表项
             for (i = 0; i < t_sum; i++) {
                 if (time_entry[i].logic_seq == rx_buf[12]) {

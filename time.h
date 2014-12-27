@@ -133,11 +133,16 @@ u8 calc_date(u8 y, u8 m, u8 w, u8 day_in_week)
 /* 删除单条时间表项 */
 void del_time(u8 i)
 {
+    u8 j, k;
+
     memmove(time_entry + i, time_entry + i + 1,
             (time_sum - i - 1) * sizeof(Time_Entry));
     time_sum--;
-    memset(time_entry + time_sum, 0,
-           (MAX_TIME_SIZE - time_sum) * sizeof(Time_Entry));  //好像没必要
+    for (j = i; j < time_sum; j++) {
+        memcpy(eep_time, time_entry + j, 8);
+        for (k = 0; k < 8; k++)
+            __EEPUT(TIME_ADDR + j * 8, eep_time[k]);
+    }
 }
 
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
@@ -155,8 +160,12 @@ void calc_time(const Time_Condition * tc, u8 ls)
 
     //若当前时间早于开始时间，则将开始时间加入时间表
     if (time_cmp(&now, &t) < 0) {
+        u8 i;
         memcpy(time_entry + time_sum, &t, sizeof(Time));
         time_entry[time_sum].logic_seq = ls;
+        memcpy(eep_time, time_entry + time_sum, 8);
+        for (i = 0; i < 8; i++)
+            __EEPUT(TIME_ADDR + time_sum * 8 + i, eep_time[i]);
         time_sum++;
         return;
     }
@@ -226,7 +235,23 @@ void calc_time(const Time_Condition * tc, u8 ls)
     memcpy(time_entry + time_sum, &t, sizeof(Time));
     log5 = ls;
     time_entry[time_sum].logic_seq = ls;
+    memcpy(eep_time, time_entry + time_sum, 8);
+    for (i = 0; i < 8; i++)
+        __EEPUT(TIME_ADDR + time_sum * 8 + i, eep_time[i]);
     time_sum++;
+}
+
+void clear_time(void)
+{
+    u8 i,
+       t_sum = time_sum;
+
+    for (i = t_sum - 1; i >= 0; i--) {
+        if (time_cmp(&now, &(time_entry[i].time)) > 0) {
+            del_time(i);
+            i++;
+        }
+    }
 }
 
 #endif

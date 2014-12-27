@@ -176,6 +176,5 @@ u8 ls_cond2 = 0xFF;
 u8 eep_logic[32];     //临时变量, 用于EEPROM与发送接受buffer间中转
 u8 eep_time[8];
 u8 eep_tem[12];
-u16 addr;
 
 #endif
