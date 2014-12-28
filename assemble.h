@@ -213,7 +213,8 @@ void set_logic(void)
     memcpy(logic_entry + current, rx_buf + 13, 32);
 
     for (i = 0; i < 32; i++)
-        __EEPUT(LOGIC_ADDR + current * 32 + i, *(rx_buf + 13 + i));
+        EEPROM_write(ADDR_logic + current * 32 + i,
+                     *(rx_buf + 13 + i));
 
     set_header(0x00, 0x05, 0x03);
     set_tail(12);
@@ -249,8 +250,10 @@ void set_logic(void)
                 break;
             }
         }
-    else
+    else {
         logic_sum++;
+        EEPROM_write(ADDR_logic_sum, logic_sum);
+    }
 
     if (logic_entry[current].enable)
         calc_time(&(logic_entry[current].cond1),
@@ -287,7 +290,7 @@ void set_logic_enable(void)
             timestamp[0] = rx_buf[10];
             timestamp[1] = rx_buf[11];
             logic_entry[i].enable = (rx_buf[13] & 0x80) >> 7;
-            __EEPUT(LOGIC_ADDR + i * 32, rx_buf[13]);
+            EEPROM_write(ADDR_logic + i * 32, rx_buf[13]);
             reset_condition(i);
             if (logic_entry[i].enable)
                 calc_time(&(logic_entry[i].cond1),
@@ -316,6 +319,8 @@ void clear_logic(void)
 {
     logic_sum = 0;
     time_sum  = 0;
+    EEPROM_write(ADDR_logic_sum, logic_sum);
+    EEPROM_write(ADDR_time_sum, time_sum);
     memset(logic_entry, 0, MAX_LOGIC_SIZE * sizeof(Logic));
     memset(time_entry, 0, MAX_TIME_SIZE * sizeof(Time_Entry));
     timestamp[0] = rx_buf[10];
@@ -343,12 +348,14 @@ void del_logic(void)
             memmove(logic_entry + i, logic_entry + i + 1,
                     (logic_sum - i - 1) * sizeof(Logic));
             logic_sum--;
+            EEPROM_write(ADDR_logic_sum, logic_sum);
             //其后的所有逻辑号减1以使逻辑号连续
             for (j = i; j < logic_sum; j++) {
                 logic_entry[j].logic_seq--;
                 memcpy(eep_logic, logic_entry + j, 32);
                 for (k = 0; k < 32; k++)
-                    __EEPUT(LOGIC_ADDR + j * 32, eep_logic[k]);
+                    EEPROM_write(ADDR_logic + j * 32 + k,
+                                 eep_logic[k]);
             }
             //删除该逻辑对应的时间表项
             for (i = 0; i < t_sum; i++) {

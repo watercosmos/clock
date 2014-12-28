@@ -129,24 +129,21 @@ const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 // EEPROM address 0x0001 - 0x001D  29 Byte
 
-__root __eeprom u8 dev_id    @ 0x0001 = 0x04;   //设备ID
-__root __eeprom u8 net_id    @ 0x0002 = 0x01;   //子网ID
-__root __eeprom u8 enable    @ 0x0003 = 0x01;   //使能状态
-__root __eeprom u8 logic_sum @ 0x0004;          //现存逻辑数
-__root __eeprom u8 time_sum  @ 0x0005;          //现存时间数
+u8 dev_id = 0x04;   //设备ID
+u8 net_id = 0x01;   //子网ID
+u8 enable = 0x01;   //使能状态
+u8 logic_sum;       //现存逻辑数
+u8 time_sum;        //现存时间数
 
-__root __eeprom u8 timestamp[2]     @ 0x0006 = {0};  //时间戳
-__root __eeprom u8 soft_version[10] @ 0x0008 = {0};  //版本号
-__root __eeprom u8 dev_models[12]   @ 0x0014         //设备型号默认为"clock"
-            = {0x63, 0x6C, 0x6F, 0x63, 0x6B, 0x00};
+u8 timestamp[2]     = {0};  //时间戳
+u8 soft_version[10] = {0};  //版本号
+//设备型号默认为"clock"
+u8 dev_models[12]   = {0x63, 0x6C, 0x6F, 0x63, 0x6B, 0x00};
 
 // EEPROM address 0x0020 - 0x051F  1280 Byte 逻辑表 最大30条
 // EEPROM address 0x0520 - 0x0610   240 Byte 时间表 最大30条
 #define MAX_LOGIC_SIZE  30
 #define MAX_TIME_SIZE   30
-#define LOGIC_ADDR  0x0020
-#define TIME_ADDR   0x0520
-
 #define MAX_RX_BUF_SIZE 60
 #define MAX_TX_BUF_SIZE 60
 
@@ -176,5 +173,34 @@ u8 ls_cond2 = 0xFF;
 u8 eep_logic[32];     //临时变量, 用于EEPROM与发送接受buffer间中转
 u8 eep_time[8];
 u8 eep_tem[12];
+
+#define ADDR_logic_sum 0x0001
+#define ADDR_time_sum  0x0003
+#define ADDR_logic     0x0020
+#define ADDR_time      0x0540
+
+__root __eeprom u8 logic_sum_tem @ 0x0001 = 0x00;
+__root __eeprom u8 time_sum_tem @ 0x0003 = 0x00;
+
+void EEPROM_write(u16 uiAddress, u8 ucData)
+{
+    u8 sreg;
+    sreg = SREG;
+    _CLI();
+    while (EECR & (1<<1));
+    EEAR = uiAddress;
+    EEDR = ucData;
+    EECR |= (1<<2);
+    EECR |= (1<<1);
+    SREG = sreg;
+}
+
+u8 EEPROM_read(u16 uiAddress)
+{
+    while (EECR & (1<<1));
+    EEAR = uiAddress;
+    EECR |= (1<<0);
+    return EEDR;
+}
 
 #endif

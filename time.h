@@ -138,17 +138,18 @@ void del_time(u8 i)
     memmove(time_entry + i, time_entry + i + 1,
             (time_sum - i - 1) * sizeof(Time_Entry));
     time_sum--;
+    EEPROM_write(ADDR_time_sum, time_sum);
     for (j = i; j < time_sum; j++) {
         memcpy(eep_time, time_entry + j, 8);
         for (k = 0; k < 8; k++)
-            __EEPUT(TIME_ADDR + j * 8, eep_time[k]);
+            EEPROM_write(ADDR_time + j * 8 + k, eep_time[k]);
     }
 }
 
 /* 根据逻辑内的时间参数计算下一次触发时间并加入时间表 */
 void calc_time(const Time_Condition * tc, u8 ls)
 {
-    u8 diw = tc->day_in_week;    //避免修改原值
+    u8 i, diw = tc->day_in_week;    //避免修改原值
     Time t, t_dec;
 
     //时间表已满，舍弃
@@ -165,8 +166,10 @@ void calc_time(const Time_Condition * tc, u8 ls)
         time_entry[time_sum].logic_seq = ls;
         memcpy(eep_time, time_entry + time_sum, 8);
         for (i = 0; i < 8; i++)
-            __EEPUT(TIME_ADDR + time_sum * 8 + i, eep_time[i]);
+            EEPROM_write(ADDR_time + time_sum * 8 + i,
+                         eep_time[i]);
         time_sum++;
+        EEPROM_write(ADDR_time_sum, time_sum);
         return;
     }
     
@@ -237,13 +240,14 @@ void calc_time(const Time_Condition * tc, u8 ls)
     time_entry[time_sum].logic_seq = ls;
     memcpy(eep_time, time_entry + time_sum, 8);
     for (i = 0; i < 8; i++)
-        __EEPUT(TIME_ADDR + time_sum * 8 + i, eep_time[i]);
+        EEPROM_write(ADDR_time + time_sum * 8 + i, eep_time[i]);
     time_sum++;
+    EEPROM_write(ADDR_time_sum, time_sum);
 }
 
 void clear_time(void)
 {
-    u8 i,
+    int i,
        t_sum = time_sum;
 
     for (i = t_sum - 1; i >= 0; i--) {

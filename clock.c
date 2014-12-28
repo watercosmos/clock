@@ -476,6 +476,7 @@ void logic_loop(void)
                 TOTX = 0;
             }
             delay_10ms();
+            break;
         }
     }
 }
@@ -484,16 +485,19 @@ void load_eeprom(void)
 {
     u8 i, j;
 
+    logic_sum = EEPROM_read(ADDR_logic_sum);
+    time_sum  = EEPROM_read(ADDR_time_sum);
+
     for (i = 0; i < logic_sum; i++) {
         for (j = 0; j < 32; j++)
-            __EEGET(eep_logic[j], LOGIC_ADDR + i * 32 + j);
+            eep_logic[j] = EEPROM_read(ADDR_logic + i * 32 + j);
         memcpy(logic_entry + i, eep_logic, 32);
         reset_condition(i);
     }
 
     for (i = 0; i < time_sum; i++) {
         for (j = 0; j < 8; j++)
-            __EEGET(eep_time[j], TIME_ADDR + i * 8 + j);
+            eep_time[j] = EEPROM_read(ADDR_time + i * 8 + j);
         memcpy(time_entry + i, eep_time, 8);
     }
 
