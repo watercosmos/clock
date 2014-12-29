@@ -148,7 +148,8 @@ void crc_check(void)
 void rx_handler(void)
 {
     filled = 0;
-    if (enable != 1 && (rx_buf[8] & 0xBF) != 0x80
+    if (enable != 1 && (rx_buf[7] & 0x3F) == 0x00
+                    && (rx_buf[8] & 0xBF) != 0x80
                     && (rx_buf[8] & 0xBF) != 0x82
                     && (rx_buf[8] & 0xBF) != 0x85) {
         rx_rst();
