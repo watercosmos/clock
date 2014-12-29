@@ -1,3 +1,4 @@
+/* time.h */
 #ifndef TIME_H
 #define TIME_H
 
@@ -140,9 +141,9 @@ void del_time(u8 i)
     time_sum--;
     EEPROM_write(ADDR_time_sum, time_sum);
     for (j = i; j < time_sum; j++) {
-        memcpy(eep_time, time_entry + j, 8);
+        memcpy(eep_tem, time_entry + j, 8);
         for (k = 0; k < 8; k++)
-            EEPROM_write(ADDR_time + j * 8 + k, eep_time[k]);
+            EEPROM_write(ADDR_time + j * 8 + k, eep_tem[k]);
     }
 }
 
@@ -164,10 +165,10 @@ void calc_time(const Time_Condition * tc, u8 ls)
         u8 i;
         memcpy(time_entry + time_sum, &t, sizeof(Time));
         time_entry[time_sum].logic_seq = ls;
-        memcpy(eep_time, time_entry + time_sum, 8);
+        memcpy(eep_tem, time_entry + time_sum, 8);
         for (i = 0; i < 8; i++)
             EEPROM_write(ADDR_time + time_sum * 8 + i,
-                         eep_time[i]);
+                         eep_tem[i]);
         time_sum++;
         EEPROM_write(ADDR_time_sum, time_sum);
         return;
@@ -238,9 +239,9 @@ void calc_time(const Time_Condition * tc, u8 ls)
     memcpy(time_entry + time_sum, &t, sizeof(Time));
     log5 = ls;
     time_entry[time_sum].logic_seq = ls;
-    memcpy(eep_time, time_entry + time_sum, 8);
+    memcpy(eep_tem, time_entry + time_sum, 8);
     for (i = 0; i < 8; i++)
-        EEPROM_write(ADDR_time + time_sum * 8 + i, eep_time[i]);
+        EEPROM_write(ADDR_time + time_sum * 8 + i, eep_tem[i]);
     time_sum++;
     EEPROM_write(ADDR_time_sum, time_sum);
 }

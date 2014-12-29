@@ -21,7 +21,6 @@ void logic_loop(void);
 void main(void)
 {
     sys_init();
-    _SEI();
 
     TOTX = 1;
 
@@ -315,6 +314,8 @@ void sys_init(void)
     TIMSK &= 0x7F;
 
     load_eeprom();
+
+    _SEI();
 }
 
 /* 开始发送 */
@@ -373,7 +374,8 @@ void time_loop(void)
                     TCCR2  = 0x05;
                     WAIT = 1;
                     ls_cond2 = j;
-                    delay_10ms();
+                    for (j = 0; j < 3; j++)
+                        delay_10ms();
                 }
                 break;
             }
@@ -475,7 +477,8 @@ void logic_loop(void)
                 start_tx();
                 TOTX = 0;
             }
-            delay_10ms();
+            for (j = 0; j < 3; j++)
+                delay_10ms();
             break;
         }
     }
@@ -485,20 +488,31 @@ void load_eeprom(void)
 {
     u8 i, j;
 
+    dev_id = EEPROM_read(ADDR_dev_id);
+    net_id = EEPROM_read(ADDR_net_id);
+    enable = EEPROM_read(ADDR_enable);
+    timestamp[0] = EEPROM_read(ADDR_timestamp);
+    timestamp[1] = EEPROM_read(ADDR_timestamp + 1);
+    for (i = 0; i < 10; i++)
+        soft_version[i] = EEPROM_read(ADDR_soft_version + i);
+    if (EEPROM_read(ADDR_dev_models) != 0x00)
+        for (i = 0; i < 12; i++)
+            dev_models[i] = EEPROM_read(ADDR_dev_models);
+
     logic_sum = EEPROM_read(ADDR_logic_sum);
     time_sum  = EEPROM_read(ADDR_time_sum);
 
     for (i = 0; i < logic_sum; i++) {
         for (j = 0; j < 32; j++)
-            eep_logic[j] = EEPROM_read(ADDR_logic + i * 32 + j);
-        memcpy(logic_entry + i, eep_logic, 32);
+            eep_tem[j] = EEPROM_read(ADDR_logic + i * 32 + j);
+        memcpy(logic_entry + i, eep_tem, 32);
         reset_condition(i);
     }
 
     for (i = 0; i < time_sum; i++) {
         for (j = 0; j < 8; j++)
-            eep_time[j] = EEPROM_read(ADDR_time + i * 8 + j);
-        memcpy(time_entry + i, eep_time, 8);
+            eep_tem[j] = EEPROM_read(ADDR_time + i * 8 + j);
+        memcpy(time_entry + i, eep_tem, 8);
     }
 
     clear_time();

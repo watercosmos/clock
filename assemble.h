@@ -1,3 +1,4 @@
+/* assemble.h */
 #ifndef ASSEMBLE_H
 #define ASSEMBLE_H
 
@@ -78,9 +79,17 @@ void set_abstract(void)
 
     timestamp[0] = rx_buf[10];
     timestamp[1] = rx_buf[11];
-    for (i = 0; i < 12; i++)
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+
+    for (i = 0; i < 12; i++) {
         dev_models[i] = rx_buf[12 + i];
+    }
+
+    for (i = 0; i < 12; i++)
+        EEPROM_write(ADDR_dev_models + i, dev_models[i]);
     enable = rx_buf[24];
+    EEPROM_write(ADDR_enable, enable);
 
     set_header(0x00, 0x00, 0x01);
     set_tail(12);
@@ -126,6 +135,11 @@ void set_id(void)
     dev_id = rx_buf[20];
     net_id = rx_buf[21];
 
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+    EEPROM_write(ADDR_dev_id, dev_id);
+    EEPROM_write(ADDR_net_id, net_id);
+
     set_header(0x00, 0x00, 0x04);
     set_tail(12);
 
@@ -139,6 +153,11 @@ void set_enable(void)
     timestamp[0] = rx_buf[10];
     timestamp[1] = rx_buf[11];
     enable = rx_buf[12];
+
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+    EEPROM_write(ADDR_enable, enable);
+
     set_header(0x00, 0x00, 0x05);
     set_tail(12);
 
@@ -157,6 +176,9 @@ void set_time(void)
     
     timestamp[0] = rx_buf[10];
     timestamp[1] = rx_buf[11];
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+
     memcpy(&now, rx_buf + 12, 7);
     I2CWriteDate(&now, week);
     set_header(0x00, 0x05, 0x00);
@@ -209,6 +231,9 @@ void set_logic(void)
 
     timestamp[0] = rx_buf[10];
     timestamp[1] = rx_buf[11];
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+
     memset(logic_entry + current, 0, sizeof(Logic));
     memcpy(logic_entry + current, rx_buf + 13, 32);
 
@@ -289,6 +314,9 @@ void set_logic_enable(void)
         if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
             timestamp[0] = rx_buf[10];
             timestamp[1] = rx_buf[11];
+            EEPROM_write(ADDR_timestamp, timestamp[0]);
+            EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+
             logic_entry[i].enable = (rx_buf[13] & 0x80) >> 7;
             EEPROM_write(ADDR_logic + i * 32, rx_buf[13]);
             reset_condition(i);
@@ -325,6 +353,8 @@ void clear_logic(void)
     memset(time_entry, 0, MAX_TIME_SIZE * sizeof(Time_Entry));
     timestamp[0] = rx_buf[10];
     timestamp[1] = rx_buf[11];
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
 
     set_header(0x00, 0x05, 0x08);
     set_tail(12);
@@ -344,6 +374,8 @@ void del_logic(void)
         if (logic_entry[i].logic_seq == rx_buf[12]) {
             timestamp[0] = rx_buf[10];
             timestamp[1] = rx_buf[11];
+            EEPROM_write(ADDR_timestamp, timestamp[0]);
+            EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
             //将被删除逻辑后面的所有逻辑前移，
             memmove(logic_entry + i, logic_entry + i + 1,
                     (logic_sum - i - 1) * sizeof(Logic));
@@ -352,10 +384,10 @@ void del_logic(void)
             //其后的所有逻辑号减1以使逻辑号连续
             for (j = i; j < logic_sum; j++) {
                 logic_entry[j].logic_seq--;
-                memcpy(eep_logic, logic_entry + j, 32);
+                memcpy(eep_tem, logic_entry + j, 32);
                 for (k = 0; k < 32; k++)
                     EEPROM_write(ADDR_logic + j * 32 + k,
-                                 eep_logic[k]);
+                                 eep_tem[k]);
             }
             //删除该逻辑对应的时间表项
             for (i = 0; i < t_sum; i++) {
