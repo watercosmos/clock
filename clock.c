@@ -498,7 +498,7 @@ void load_eeprom(void)
         soft_version[i] = EEPROM_read(ADDR_soft_version + i);
     if (EEPROM_read(ADDR_dev_models) != 0x00)
         for (i = 0; i < 12; i++)
-            dev_models[i] = EEPROM_read(ADDR_dev_models);
+            dev_models[i] = EEPROM_read(ADDR_dev_models + i);
 
     logic_sum = EEPROM_read(ADDR_logic_sum);
     time_sum  = EEPROM_read(ADDR_time_sum);
