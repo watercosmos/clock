@@ -368,7 +368,7 @@ void clear_logic(void)
 /* 删除单条逻辑 */
 void del_logic(void)
 {
-    u8 i, j, k,
+    u8 i, j,
        l_sum = logic_sum,
        t_sum = time_sum;
 
@@ -384,20 +384,20 @@ void del_logic(void)
             logic_sum--;
             EEPROM_write(ADDR_logic_sum, logic_sum);
             //其后的所有逻辑号减1以使逻辑号连续
-            for (j = i; j < logic_sum; j++) {
+            for (j = i; j < logic_sum; j++)
                 logic_entry[j].logic_seq--;
-                memcpy(eep_tem, logic_entry + j, 32);
-                for (k = 0; k < 32; k++)
-                    EEPROM_write(ADDR_logic + j * 32 + k,
-                                 eep_tem[k]);
-            }
+            DEL = 1;
+            ls_del = i;
             //删除该逻辑对应的时间表项
-            for (i = 0; i < t_sum; i++) {
-                if (time_entry[i].logic_seq == rx_buf[12]) {
-                    del_time(i);
+            for (j = 0; j < t_sum; j++) {
+                if (time_entry[j].logic_seq == rx_buf[12]) {
+                    del_time(j);
                     break;
                 }
             }
+            for (j = 0; j < t_sum; j++)
+                if (time_entry[j].logic_seq > i)
+                    time_entry[j].logic_seq--;
             //成功删除响应
             set_header(0x00, 0x05, 0x09);
             set_tail(12);

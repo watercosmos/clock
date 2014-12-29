@@ -39,6 +39,8 @@ struct
 #define COLLISION FlagByte.bit2   //冲突等待标志
 #define TOTX      FlagByte.bit3   //请求发送标志
 #define WAIT      FlagByte.bit4   //等待传感器数据
+#define DEL       FlagByte.bit5   //等待从EEPROM中删除逻辑
+#define DO_DEL    FlagByte.bit6   //主循环中执行删除
 
 #define MAX_LOGIC_SIZE  30
 #define MAX_TIME_SIZE   30
@@ -160,6 +162,7 @@ u8 timer2;            //定时器0常规计数
 int m1,m2,m3,log5;    //无意义, 但必须
 
 u8 ls_cond2 = 0xFF;
+u8 ls_del;
 
 u8 eep_tem[32];       //临时变量, 用于EEPROM与发送接受buffer间中转
 
