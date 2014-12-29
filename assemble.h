@@ -317,7 +317,9 @@ void set_logic_enable(void)
             EEPROM_write(ADDR_timestamp, timestamp[0]);
             EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
 
-            logic_entry[i].enable = (rx_buf[13] & 0x80) >> 7;
+            if (logic_entry[i].enable == rx_buf[13] >> 7)
+                break;
+            logic_entry[i].enable = rx_buf[13] >> 7;
             EEPROM_write(ADDR_logic + i * 32, rx_buf[13]);
             reset_condition(i);
             if (logic_entry[i].enable)
@@ -326,7 +328,7 @@ void set_logic_enable(void)
             else
                 //删除该逻辑对应的时间表项
                 for (i = 0; i < t_sum; i++) {
-                    if (time_entry[i].logic_seq == rx_buf[12]) {
+                    if (time_entry[i].logic_seq == logic_entry[i].logic_seq) {
                         del_time(i);
                         break;
                     }
@@ -376,7 +378,7 @@ void del_logic(void)
             timestamp[1] = rx_buf[11];
             EEPROM_write(ADDR_timestamp, timestamp[0]);
             EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
-            //将被删除逻辑后面的所有逻辑前移，
+            //将被删除逻辑后面的所有逻辑前移
             memmove(logic_entry + i, logic_entry + i + 1,
                     (logic_sum - i - 1) * sizeof(Logic));
             logic_sum--;
@@ -429,7 +431,7 @@ void tx_to_ctrl(u8 ls)
     set_header(0x01, 0x05, 0x85);
     tx_buf[12] = ls;
     set_tail(13);
-    
+
     tx_num = 15;
     TOTX   = 1;
 }
