@@ -389,6 +389,9 @@ void time_loop(void)
                     for (j = 0; j < 3; j++)
                         delay_10ms();
                 }
+                WDI = 0;
+                delay_10ms();
+                WDI = 1;
                 break;
             }
         }
@@ -482,6 +485,9 @@ void logic_loop(void)
                 start_tx();
                 TOTX = 0;
             }
+            WDI = 0;
+            delay_10ms();
+            WDI = 1;
             for (j = 0; j < 3; j++)
                 delay_10ms();
             tx_to_ctrl(logic_entry[i].logic_seq);

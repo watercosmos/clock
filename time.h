@@ -17,7 +17,8 @@ int time_cmp(const Time * t1, const Time * t2)
         return t1->hour - t2->hour;
     else if (t1->minute != t2->minute)
         return t1->minute - t2->minute;
-    else if (t1->second != t2->second)
+    else if (t1->second - t2->second < 0 ||
+             t1->second - t2->second >= 16)
         return t1->second - t2->second;
     else
         return 0;
