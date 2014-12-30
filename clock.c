@@ -13,7 +13,6 @@ void start_tx(void);
 void rx_rst(void);
 void crc_check(void);
 void rx_handler(void);
-void delay_10ms(void);
 void time_loop(void);
 void check_sensor(void);
 void logic_loop(void);
@@ -41,7 +40,7 @@ void main(void)
             eep_del_logic();
 
         WDI = 0;
-        delay_10ms();
+        delay_10ms(1);
         WDI = 1;
     }
 }
@@ -142,10 +141,12 @@ void crc_check(void)
     crc = 0xffff;
     for (i = 0; i < rx_pos; i++)
         calc_crc(rx_buf[i]);
-    if (crc == 0)
+    if (crc == 0) {
         filled = 1;
+        BUSY = 0;
+    }
     else
-        rx_rst();    //这里是否应该都执行rx_rst，因为若接收一帧后还未处理，又开始下一次接收？
+        rx_rst();
 }
 
 /* 接收帧处理函数 */
@@ -273,7 +274,7 @@ __interrupt void t0_ovf_isr(void)
     timer0++;
 
     if (DEL && (timer0 == 0 || timer0 == 13)) {
-        if (ls_del == logic_sum)
+        if (ls_del >= logic_sum)
             DEL = 0;
         else
             DO_DEL = 1;
@@ -349,13 +350,6 @@ void rx_rst(void)
     rx_pos  = 0;
 }
 
-/* 1ms延时函数，用于踢狗 */
-void delay_10ms(void)
-{
-  u16 i;
-  for (i = 0; i < 11400; i++);
-}
-
 /*
  * 遍历时间表
  * 若时间匹配，则将对应逻辑的条件1置为真
@@ -386,11 +380,10 @@ void time_loop(void)
                     TCCR2  = 0x05;
                     WAIT = 1;
                     ls_cond2 = j;
-                    for (j = 0; j < 3; j++)
-                        delay_10ms();
+                    delay_10ms(3);
                 }
                 WDI = 0;
-                delay_10ms();
+                delay_10ms(1);
                 WDI = 1;
                 break;
             }
@@ -426,9 +419,7 @@ void check_sensor(void)
     }
     WAIT = 0;
     ls_cond2 = 0xFF;
-    delay_10ms();
-    delay_10ms();
-    delay_10ms();
+    delay_10ms(3);
 }
 
 /*
@@ -438,7 +429,7 @@ void check_sensor(void)
  */
 void logic_loop(void)
 {
-    u8 i, j, enable = 0;
+    u8 i, enable = 0;
 
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].enable == 0)
@@ -481,22 +472,11 @@ void logic_loop(void)
             reset_condition(i);
 
             tx_to_switch(&(logic_entry[i]));
-            if (TOTX && !BUSY) {
-                start_tx();
-                TOTX = 0;
-            }
             WDI = 0;
-            delay_10ms();
+            delay_10ms(1);
             WDI = 1;
-            for (j = 0; j < 3; j++)
-                delay_10ms();
             tx_to_ctrl(logic_entry[i].logic_seq);
-            if (TOTX && !BUSY) {
-                start_tx();
-                TOTX = 0;
-            }
-            for (j = 0; j < 3; j++)
-                delay_10ms();
+
             break;
         }
     }

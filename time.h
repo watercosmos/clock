@@ -4,6 +4,14 @@
 
 void I2CReadDate(Time *times);
 
+/* 10ms延时函数 */
+void delay_10ms(u8 count)
+{
+    u16 i, j;
+    for (j = 0; j < count; j++)
+        for (i = 0; i < 11400; i++);
+}
+
 /* 时间比较函数，t1早则返回负数，晚则返回正数，相等返回0 */
 int time_cmp(const Time * t1, const Time * t2)
 {
@@ -17,8 +25,28 @@ int time_cmp(const Time * t1, const Time * t2)
         return t1->hour - t2->hour;
     else if (t1->minute != t2->minute)
         return t1->minute - t2->minute;
-    else if (t1->second - t2->second < 0 ||
-             t1->second - t2->second >= 16)
+    else if (t1->second != t2->second)
+        return t1->second - t2->second;
+    else
+        return 0;
+}
+
+/* 时间粗略比较函数，t1比t2晚1分钟内亦视为相等 */
+int time_cmp2(const Time * t1, const Time * t2)
+{
+    if (t1->year != t2->year)
+        return t1->year - t2->year;
+    else if (t1->month != t2->month)
+        return t1->month - t2->month;
+    else if (t1->day != t2->day)
+        return t1->day - t2->day;
+    else if (t1->hour != t2->hour)
+        return t1->hour - t2->hour;
+    else if (t1->minute == t2->minute + 1)
+        return 0;
+    else if (ti->minute != t2->minute)
+        return t1->minute - t2->minute;
+    else if (t1->second < t2->second)
         return t1->second - t2->second;
     else
         return 0;

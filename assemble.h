@@ -2,6 +2,8 @@
 #ifndef ASSEMBLE_H
 #define ASSEMBLE_H
 
+void start_tx(void);
+
 /* CRC校验算法 */
 void calc_crc(u8 buf)
 {
@@ -79,23 +81,25 @@ void set_abstract(void)
 
     timestamp[0] = rx_buf[10];
     timestamp[1] = rx_buf[11];
-    EEPROM_write(ADDR_timestamp, timestamp[0]);
-    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
-
-    for (i = 0; i < 12; i++) {
-        dev_models[i] = rx_buf[12 + i];
-    }
-
-    for (i = 0; i < 12; i++)
-        EEPROM_write(ADDR_dev_models + i, dev_models[i]);
     enable = rx_buf[24];
-    EEPROM_write(ADDR_enable, enable);
 
     set_header(0x00, 0x00, 0x01);
     set_tail(12);
-
     tx_num = 14;
     TOTX   = 1;
+    if (TOTX && !BUSY) {
+        start_tx();
+        TOTX = 0;
+    }
+    delay_10ms(2);
+
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+    EEPROM_write(ADDR_enable, enable);
+    for (i = 0; i < 12; i++) {
+        dev_models[i] = rx_buf[12 + i];
+        EEPROM_write(ADDR_dev_models + i, dev_models[i]);
+    }
 }
 
 /* 发送摘要信息 */
@@ -221,6 +225,18 @@ void set_logic(void)
     if (logic_sum >= MAX_LOGIC_SIZE)
         return;
 
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
+
+    set_header(0x00, 0x05, 0x03);
+    set_tail(12);
+    tx_num = 14;
+    TOTX   = 1;
+    if (TOTX && !BUSY) {
+        start_tx();
+        TOTX = 0;
+    }
+    delay_10ms(2);
     //遍历逻辑表，序号已存在则将修改逻辑
     for (i = 0; i < logic_sum; i++) {
         if (logic_entry[i].logic_seq == (rx_buf[13] & 0x7F)) {
@@ -229,23 +245,9 @@ void set_logic(void)
         }
     }
 
-    timestamp[0] = rx_buf[10];
-    timestamp[1] = rx_buf[11];
-    EEPROM_write(ADDR_timestamp, timestamp[0]);
-    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
-
-    memset(logic_entry + current, 0, sizeof(Logic));
     memcpy(logic_entry + current, rx_buf + 13, 32);
 
-    for (i = 0; i < 32; i++)
-        EEPROM_write(ADDR_logic + current * 32 + i,
-                     *(rx_buf + 13 + i));
-
-    set_header(0x00, 0x05, 0x03);
-    set_tail(12);
-
-    tx_num = 14;
-    TOTX   = 1;
+    
 
     /*
      * 排除未启用的条件
@@ -283,6 +285,12 @@ void set_logic(void)
     if (logic_entry[current].enable)
         calc_time(&(logic_entry[current].cond1),
                   logic_entry[current].logic_seq);
+
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+    for (i = 0; i < 32; i++)
+        EEPROM_write(ADDR_logic + current * 32 + i,
+                     *(rx_buf + 13 + i));
 }
 
 /* 发送一条逻辑 */
@@ -424,6 +432,11 @@ void tx_to_switch(const Logic *le)
 
     tx_num = 17;
     TOTX   = 1;
+    if (TOTX && !BUSY) {
+        start_tx();
+        TOTX = 0;
+    }
+    delay_10ms(2);
 }
 
 void tx_to_ctrl(u8 ls)
@@ -434,6 +447,11 @@ void tx_to_ctrl(u8 ls)
 
     tx_num = 15;
     TOTX   = 1;
+    if (TOTX && !BUSY) {
+        start_tx();
+        TOTX = 0;
+    }
+    delay_10ms(2);
 }
 
 void tx_to_sensor(Sensor_Condition *sc)
