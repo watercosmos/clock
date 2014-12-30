@@ -37,7 +37,7 @@ struct
 #define TX        FlagByte.bit1   //正在发送数据标志
 #define COLLISION FlagByte.bit2   //冲突等待标志
 #define TOTX      FlagByte.bit3   //请求发送标志
-#define WAIT      FlagByte.bit4   //等待传感器数据
+#define COND2     FlagByte.bit4   //等待传感器数据
 
 #define MAX_LOGIC_SIZE  30
 #define MAX_TIME_SIZE   30
@@ -124,6 +124,9 @@ typedef struct
     Time time;                    //触发时间
     u8 logic_seq;                 //对应逻辑
 } Time_Entry;
+
+/* 传感器数据 */
+u8 sdata[6];
 
 const u8 MAC[8] = {0x00, 0x00, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6};
 const u8 days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};

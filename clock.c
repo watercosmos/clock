@@ -14,8 +14,8 @@ void rx_rst(void);
 void crc_check(void);
 void rx_handler(void);
 void time_loop(void);
-void check_sensor(void);
 void logic_loop(void);
+void cond2_loop(void);
 
 void main(void)
 {
@@ -34,6 +34,7 @@ void main(void)
 
         time_loop();
         logic_loop();
+        cond2_loop();
 
         WDI = 0;
         delay_10ms(1);
@@ -209,9 +210,8 @@ void rx_handler(void)
             default:
                 break;
         }
-    } else if (WAIT && ls_cond2 != 0xFF &&
-               (rx_buf[7] & 0x3F) == 0x06 && rx_buf[8] == 0x0A)
-        check_sensor();
+    } else if (COND2 && (rx_buf[7] & 0x3F) == 0x06 && rx_buf[8] == 0x0A)
+        rx_sensor();
     rx_rst();
     memset(rx_buf, 0, MAX_RX_BUF_SIZE);
 }
@@ -244,10 +244,9 @@ __interrupt void t2_ovf_isr(void)
         return;
 
     timer2 = 0;
+    COND2  = 0;
+    sdata[0] = 0;
     TCCR2  = 0x00;
-    WAIT = 0;
-    reset_condition(ls_cond2);
-    ls_cond2 = 0xFF;
 }
 
 /* 定时器1中断 */
@@ -360,16 +359,20 @@ void time_loop(void)
                 calc_time(&(logic_entry[j].cond1),
                           logic_entry[j].logic_seq);
                 if (logic_entry[j].cond2_enable) {
-                    tx_to_sensor(&(logic_entry[j].cond2));
-                    if (TOTX && !BUSY) {
-                        start_tx();
-                        TOTX = 0;
+                    if (!COND2) {
+                        COND2 = 1;
+                        TCCR2 = 0x00;    //定时器需要重置吗?
+                        TCNT2 = 0x53;
+                        TCCR2 = 0x05;
+                        tx_to_sensor(&(logic_entry[j].cond2));
+                        if (TOTX && !BUSY) {
+                            start_tx();
+                            TOTX = 0;
+                        }
+                        delay_10ms(3);
+                    } else {
+
                     }
-                    //启动定时器2, 到时后WAIT置0
-                    TCCR2  = 0x05;
-                    WAIT = 1;
-                    ls_cond2 = j;
-                    delay_10ms(3);
                 }
                 WDI = 0;
                 delay_10ms(1);
@@ -382,33 +385,43 @@ void time_loop(void)
     }
 }
 
-void check_sensor(void)
+void cond2_loop(void)
 {
-    TCCR2  = 0x00;
-    switch (logic_entry[ls_cond2].cond2.type) {
-        case 1:    //干节点1
-        case 2:    //干节点2
-            break;
-        case 3:    //温度
-            if (rx_buf[13] > logic_entry[ls_cond2].cond2.para1 &&
-                rx_buf[13] < logic_entry[ls_cond2].cond2.para2)
-                logic_entry[ls_cond2].cond2_bool = 1;
-            break;
-        case 4:    //红外
-            if (rx_buf[10] == logic_entry[ls_cond2].cond2.para1)
-                logic_entry[ls_cond2].cond2_bool = 1;
-            break;
-        case 5:    //亮度
-            if (rx_buf[11] > logic_entry[ls_cond2].cond2.para1 &&
-                rx_buf[11] < logic_entry[ls_cond2].cond2.para2)
-                logic_entry[ls_cond2].cond2_bool = 1;
-            break;
-        default:
-            break;
+    u8 i;
+
+    for (i = 0; i < logic_sum; i++) {
+        if (logic_entry[i].cond2_enable && logic_entry[i].cond1_bool == 1) {
+            if (!COND2)          //超出等待窗口
+                reset_condition(i);
+            if (sdata[0] == 0)   //未收到传感器数据
+                return;
+
+            switch (logic_entry[i].cond2.type) {
+                case 1:          //干节点1
+                case 2:          //干节点2
+                    break;
+                case 3:          //温度
+                    if (sdata[2] > logic_entry[i].cond2.para1 &&
+                        sdata[2] < logic_entry[i].cond2.para2)
+                        logic_entry[i].cond2_bool = 1;
+                    break;
+                case 4:          //红外
+                    if (sdata[1] == logic_entry[i].cond2.para1)
+                        logic_entry[i].cond2_bool = 1;
+                    break;
+                case 5:    //亮度
+                    if (sdata[4] > logic_entry[i].cond2.para1 &&
+                        sdata[4] < logic_entry[i].cond2.para2)
+                        logic_entry[i].cond2_bool = 1;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
-    WAIT = 0;
-    ls_cond2 = 0xFF;
-    delay_10ms(3);
+    WDI = 0;
+    delay_10ms(1);
+    WDI = 1;
 }
 
 /*

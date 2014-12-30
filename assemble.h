@@ -485,4 +485,10 @@ void tx_to_sensor(Sensor_Condition *sc)
     TOTX   = 1;
 }
 
+void rx_sensor(void)
+{
+    sdata[0] = 1;
+    memcpy(sdata + 1, rx_buf + 10, 5);
+}
+
 #endif
