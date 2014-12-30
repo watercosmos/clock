@@ -393,18 +393,34 @@ void del_logic(void)
         if (logic_entry[i].logic_seq == rx_buf[12]) {
             timestamp[0] = rx_buf[10];
             timestamp[1] = rx_buf[11];
-            EEPROM_write(ADDR_timestamp, timestamp[0]);
-            EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
             //将被删除逻辑后面的所有逻辑前移
             memmove(logic_entry + i, logic_entry + i + 1,
                     (logic_sum - i - 1) * sizeof(Logic));
             logic_sum--;
+
+            set_header(0x00, 0x05, 0x09);
+            set_tail(12);
+            tx_num = 14;
+            TOTX   = 1;
+            if (TOTX && !BUSY) {
+                start_tx();
+                TOTX = 0;
+            }
+            delay_10ms(2);
+
+            EEPROM_write(ADDR_timestamp, timestamp[0]);
+            EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
             EEPROM_write(ADDR_logic_sum, logic_sum);
             //其后的所有逻辑号减1以使逻辑号连续
-            for (j = i; j < logic_sum; j++)
+            for (j = i; j < logic_sum; j++) {
+                WDI = 0;
+                delay_10ms(1);
+                WDI = 1;
                 logic_entry[j].logic_seq--;
-            DEL = 1;
-            ls_del = i;
+                memcpy(eep_tem, logic_entry + j, 32);
+                for (i = 0; i < 32; i++)
+                    EEPROM_write(ADDR_logic + j * 32 + i, eep_tem[i]);
+            }
             //删除该逻辑对应的时间表项
             for (j = 0; j < t_sum; j++) {
                 if (time_entry[j].logic_seq == rx_buf[12]) {
@@ -415,12 +431,7 @@ void del_logic(void)
             for (j = 0; j < t_sum; j++)
                 if (time_entry[j].logic_seq > i)
                     time_entry[j].logic_seq--;
-            //成功删除响应
-            set_header(0x00, 0x05, 0x09);
-            set_tail(12);
-
-            tx_num = 14;
-            TOTX   = 1;
+            
             break;
         }
     }
@@ -445,7 +456,7 @@ void tx_to_switch(const Logic *le)
         start_tx();
         TOTX = 0;
     }
-    delay_10ms(2);
+    delay_10ms(3);
 }
 
 void tx_to_ctrl(u8 ls)
@@ -460,7 +471,7 @@ void tx_to_ctrl(u8 ls)
         start_tx();
         TOTX = 0;
     }
-    delay_10ms(2);
+    delay_10ms(3);
 }
 
 void tx_to_sensor(Sensor_Condition *sc)

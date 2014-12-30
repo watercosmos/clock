@@ -16,7 +16,6 @@ void rx_handler(void);
 void time_loop(void);
 void check_sensor(void);
 void logic_loop(void);
-void eep_del_logic(void);
 
 void main(void)
 {
@@ -35,9 +34,6 @@ void main(void)
 
         time_loop();
         logic_loop();
-
-        if (DO_DEL)
-            eep_del_logic();
 
         WDI = 0;
         delay_10ms(1);
@@ -234,7 +230,7 @@ __interrupt void uart0_tx_isr(void)
         tx_pos  = 0;
         RS485EN = 0;
         memset(tx_buf, 0, MAX_TX_BUF_SIZE);
-        rx_rst();
+        //rx_rst();
     }
 }
 
@@ -259,7 +255,7 @@ __interrupt void t2_ovf_isr(void)
 __interrupt void t1_ovf_isr(void)
 {
     TCCR1B = 0x00;        //停止定时器
-    rx_rst();             //接收发送复位
+    //rx_rst();             //接收发送复位
     BUSY = 0;             //清网络忙标志
     if (COLLISION) {
         COLLISION = 0;
@@ -272,13 +268,6 @@ __interrupt void t1_ovf_isr(void)
 __interrupt void t0_ovf_isr(void)
 {
     timer0++;
-
-    if (DEL && (timer0 == 0 || timer0 == 13)) {
-        if (ls_del >= logic_sum)
-            DEL = 0;
-        else
-            DO_DEL = 1;
-    }
 
     if (timer0 < 25)     //600 ms
         return;
@@ -514,15 +503,4 @@ void load_eeprom(void)
     }
 
     clear_time();
-}
-
-void eep_del_logic(void)
-{
-    u8 i;
-
-    DO_DEL = 0;
-    memcpy(eep_tem, logic_entry + ls_del, 32);
-    for (i = 0; i < 32; i++)
-        EEPROM_write(ADDR_logic + ls_del * 32 + i, eep_tem[i]);
-    ls_del++;
 }
