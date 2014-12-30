@@ -362,7 +362,7 @@ void time_loop(void)
     u8 n = time_sum;
 
     for (i = 0; i < n; i++) {
-        if (time_cmp(&now, &(time_entry[i].time)))
+        if (time_cmp2(&now, &(time_entry[i].time)))
             continue;
 
         for (j = 0; j < logic_sum; j++) {

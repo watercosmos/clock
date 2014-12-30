@@ -44,7 +44,7 @@ int time_cmp2(const Time * t1, const Time * t2)
         return t1->hour - t2->hour;
     else if (t1->minute == t2->minute + 1)
         return 0;
-    else if (ti->minute != t2->minute)
+    else if (t1->minute != t2->minute)
         return t1->minute - t2->minute;
     else if (t1->second < t2->second)
         return t1->second - t2->second;
@@ -170,6 +170,9 @@ void del_time(u8 i)
     time_sum--;
     EEPROM_write(ADDR_time_sum, time_sum);
     for (j = i; j < time_sum; j++) {
+        WDI = 0;
+        delay_10ms(1);
+        WDI = 1;
         memcpy(eep_tem, time_entry + j, 8);
         for (k = 0; k < 8; k++)
             EEPROM_write(ADDR_time + j * 8 + k, eep_tem[k]);

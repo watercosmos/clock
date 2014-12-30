@@ -380,6 +380,15 @@ void del_logic(void)
        l_sum = logic_sum,
        t_sum = time_sum;
 
+    if (rx_buf[10] == timestamp[0] || rx_buf[11] == timestamp[1]) {
+        set_header(0x00, 0x05, 0x09);
+        set_tail(12);
+
+        tx_num = 14;
+        TOTX   = 1;
+        return;
+    }
+
     for (i = 0; i < l_sum; i++) {
         if (logic_entry[i].logic_seq == rx_buf[12]) {
             timestamp[0] = rx_buf[10];
