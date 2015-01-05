@@ -169,6 +169,46 @@ void set_enable(void)
     TOTX   = 1;
 }
 
+/* 启用/禁用心跳 */
+void set_heartbeat(void)
+{
+    timestamp[0] = rx_buf[10];
+    timestamp[1] = rx_buf[11];
+    EEPROM_write(ADDR_timestamp, timestamp[0]);
+    EEPROM_write(ADDR_timestamp + 1, timestamp[1]);
+
+    HB = rx_buf[12];
+    if (HB) {
+        duration = rx_buf[13];
+        interval = 256 * rx_buf[14] + rx_buf[15];
+        if (duration == 0)
+            total = 0xFF;
+        else
+            total = duration * 60 / interval;
+    } else {
+        timer1   = 0;
+        duration = 0;
+        interval = 0;
+        total    = 0;
+    }
+
+    set_header(0x00, 0x00, 0x06);
+    set_tail(12);
+
+    tx_num = 14;
+    TOTX   = 1;
+}
+
+/* 发送心跳帧 */
+void tx_heartbeat(void)
+{
+    set_header(0x00, 0x00, 0x87);
+    set_tail(12);
+
+    tx_num = 14;
+    TOTX   = 1;
+}
+
 /* 校准时间 */
 void set_time(void)
 {

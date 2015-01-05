@@ -36,6 +36,15 @@ void main(void)
         logic_loop();
         cond2_loop();
 
+        if (TXHB) {
+            TXHB = 0;
+            tx_heartbeat();
+            if (total == 0) {
+                HB = 0;
+                timer1 = 0;
+            }
+        }
+
         WDI = 0;
         delay_10ms(1);
         WDI = 1;
@@ -178,6 +187,9 @@ void rx_handler(void)
             case 0x85:
                 set_enable();
                 break;
+            case 0x86:
+                set_heartbeat();
+                break;
             default:
                 break;
         }
@@ -268,8 +280,18 @@ __interrupt void t0_ovf_isr(void)
 {
     timer0++;
 
-    if (timer0 < 25)     //600 ms
+    if (timer0 < 21)     //500 ms
         return;
+
+    if (HB) {
+        timer1++;
+        if (timer1 == interval * 2 && total != 0) {
+            timer1 = 0;
+            TXHB = 1;
+            if (total != 0xFF)
+                total--;
+        }
+    }
 
     timer0 = 0;
     I2CReadDate(&now);

@@ -38,6 +38,8 @@ struct
 #define COLLISION FlagByte.bit2   //冲突等待标志
 #define TOTX      FlagByte.bit3   //请求发送标志
 #define COND2     FlagByte.bit4   //等待传感器数据
+#define HB        FlagByte.bit5   //心跳使能
+#define TXHB      FlagByte.bit6   //发送心跳帧
 
 #define MAX_LOGIC_SIZE  30
 #define MAX_TIME_SIZE   30
@@ -155,9 +157,15 @@ Logic logic_entry[MAX_LOGIC_SIZE];      //逻辑表
 Time_Entry time_entry[MAX_TIME_SIZE];   //时间表
 
 Time now;             //当前时间
-u8 tem;               //计算星期的移位计数
-u8 timer0;            //定时器0常规计数
-u8 timer2;            //定时器0常规计数
+u8  tem;               //计算星期的移位计数
+u8  timer0;            //定时器0读时间计数
+u16 timer1;            //定时器0心跳计数
+u8  timer2;            //定时器2常规计数
+
+//心跳
+u8  total;
+u8  duration;
+u16 interval;
 
 int m1,m2,m3,log5;    //无意义, 但必须
 
