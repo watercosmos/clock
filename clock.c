@@ -376,25 +376,23 @@ void time_loop(void)
             continue;
 
         for (j = 0; j < logic_sum; j++) {
+            if (logic_entry[j].cond1_bool == 1)
+                continue;
             if (logic_entry[j].logic_seq == time_entry[i].logic_seq) {
                 logic_entry[j].cond1_bool = 1;
                 calc_time(&(logic_entry[j].cond1),
                           logic_entry[j].logic_seq);
-                if (logic_entry[j].cond2_enable) {
-                    if (!COND2) {
-                        COND2 = 1;
-                        TCCR2 = 0x00;    //定时器需要重置吗?
-                        TCNT2 = 0x53;
-                        TCCR2 = 0x05;
-                        tx_to_sensor(&(logic_entry[j].cond2));
-                        if (TOTX && !BUSY) {
-                            start_tx();
-                            TOTX = 0;
-                        }
-                        delay_10ms(3);
-                    } else {
-
+                if (logic_entry[j].cond2_enable && !COND2) {
+                    COND2 = 1;
+                    TCCR2 = 0x00;    //定时器需要重置吗?
+                    TCNT2 = 0x53;
+                    TCCR2 = 0x05;
+                    tx_to_sensor(&(logic_entry[j].cond2));
+                    if (TOTX && !BUSY) {
+                        start_tx();
+                        TOTX = 0;
                     }
+                    delay_10ms(15);
                 }
                 WDI = 0;
                 delay_10ms(1);
